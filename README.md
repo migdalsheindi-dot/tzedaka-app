@@ -1,6 +1,8 @@
-# Tzedaká — App de donación diaria
+# Tzedaká — App de donación diaria (ISEJ)
 
-App minimalista en React Native (Expo, Managed Workflow) para donar Tzedaká en segundos: elegís un monto, ves una moneda cayendo en la alcancía, y te redirige a Mercado Pago para completar el pago.
+App minimalista en React Native (Expo, Managed Workflow) para donar Tzedaká en segundos para [ISEJ](https://www.isej.com/): elegís un monto, ves una moneda cayendo en la alcancía, y te redirige a Mercado Pago para completar el pago.
+
+Repo: https://github.com/migdalsheindi-dot/tzedaka-app
 
 ## Estructura del proyecto
 
@@ -13,33 +15,44 @@ tzedaka-app/
       index.tsx            Pantalla principal (donación rápida)
       impact.tsx            Pantalla "Mi Impacto"
   components/
-    TzedakaBox.tsx         Ilustración SVG de la alcancía (jarra transparente + tapa/base de madera)
+    IsejHeader.tsx          Logo de ISEJ + frase motivacional de encabezado
+    TzedakaBox.tsx         Ilustración SVG de la alcancía (jarra transparente + tapa/base de madera, etiqueta en español)
     Coin.tsx                Ilustración SVG de la moneda que cae
     CoinAnimation.tsx       Animación de la moneda cayendo hasta su lugar en la pila (Reanimated)
     AmountButton.tsx        Botón de monto con feedback táctil
     CustomAmountModal.tsx   Modal "Otro monto"
     ConfirmDonationModal.tsx Modal "¿Completaste tu donación?" (post Mercado Pago)
     ImpactCard.tsx          Tarjeta de impacto/logro
+    ImpactGallery.tsx        Carrusel de fotos de actividades de ISEJ
   hooks/
     useDonations.ts         Persistencia local (AsyncStorage): historial + total
     usePendingDonation.ts    Donación esperando confirmación (persistida)
     useCoinSound.ts          Reproducción del sonido de moneda (expo-audio)
   utils/
     currency.ts              Formateo de pesos argentinos (ARS)
-    mercadopago.ts            Helper de redirección segura a Mercado Pago
+    mercadopago.ts            Resuelve el link de Mercado Pago según el monto
     impact.ts                  Umbrales y textos de impacto (editar con datos reales)
     jarGeometry.ts              Geometría compartida de la alcancía y la pila de monedas
-  assets/sounds/coin-drop.wav  Sonido corto de moneda cayendo (sintetizado)
+  assets/
+    sounds/coin-drop.wav       Sonido corto de moneda cayendo (sintetizado)
+    isej/                       Logo y fotos reales de ISEJ (isej.com), usados en el header y la galería
 ```
 
 ## Flujo de donación
 
 1. El usuario toca un monto rápido ($500 a $10.000) o carga "Otro monto".
-2. Se abre inmediatamente el link de Mercado Pago
-   (`https://link.mercadopago.com.ar/isej770?amount=<monto>`) con
-   `Linking.openURL`, que abre la app nativa de Mercado Pago si está
-   instalada, o el navegador si no. **Todavía no se suma nada**: ni la
-   moneda ni el monto se registran en este paso.
+2. Se abre inmediatamente el link de Mercado Pago que corresponda
+   (`utils/mercadopago.ts` → `getMercadoPagoUrl`) con `Linking.openURL`,
+   que abre la app nativa de Mercado Pago si está instalada, o el
+   navegador si no:
+   - **Exactamente $1.000:** va directo al checkout rápido ya armado
+     (`https://mpago.la/2eaercD`), listo para pagar sin tipear nada.
+   - **Cualquier otro monto** (rápido o "Otro monto"): va al link base de
+     ISEJ (`https://link.mercadopago.com.ar/isej770`), donde el usuario
+     ingresa/confirma el monto en el checkout.
+
+   **Todavía no se suma nada** en este paso: ni la moneda ni el monto se
+   registran hasta confirmar el pago (paso 3).
 3. Cuando el usuario vuelve a la app (Mercado Pago se cierra o la app pasa
    a primer plano de nuevo) aparece el modal "¿Completaste tu donación?".
    - **Sí, ya doné:** recién ahí se dispara la animación de la moneda
@@ -59,12 +72,6 @@ doné" es una confirmación manual del usuario, no una verificación real del
 pago. Para eso hace falta una Fase 2 con backend + webhooks de Mercado
 Pago (ver más abajo).
 
-**Nota sobre el monto en la URL:** `utils/mercadopago.ts` arma la URL con
-`?amount=<monto>`. Si el link de Mercado Pago está configurado como "monto
-a elección del pagador", ese parámetro debería prellenar el campo — pero
-no hay una API pública documentada que lo garantice para este tipo de link
-corto (`link.mercadopago.com.ar`). Probalo con un pago real chico para
-confirmar que efectivamente prellena el monto.
 
 ## Cómo probar la app en iOS y Android en simultáneo
 
@@ -109,8 +116,13 @@ npm run web       # preview rápido en navegador (útil para iterar UI)
 
 ## Notas para producción
 
-- Los íconos/splash en `assets/` son los placeholders que genera Expo —
-  reemplazalos por el branding real antes de publicar.
+- El logo y las fotos de `assets/isej/` se bajaron del sitio oficial
+  (isej.com) para esta primera versión — reemplazalas por los archivos
+  originales en alta resolución que tenga la institución cuando estén
+  disponibles, y confirmá que las fotos elegidas para la galería sean las
+  que ISEJ quiere mostrar públicamente.
+- Los íconos/splash en `assets/` (afuera de `isej/`) son los placeholders
+  que genera Expo — reemplazalos por el branding real antes de publicar.
 - Los umbrales y textos de `utils/impact.ts` ("con $X ayudaste a...") son
   ilustrativos: ajustalos con los valores reales de la organización.
 - El total y el historial de donaciones son **locales al dispositivo**
