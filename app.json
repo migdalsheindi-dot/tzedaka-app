@@ -25,6 +25,9 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "experiments": {
+      "baseUrl": "/tzedaka-app"
+    },
     "plugins": [
       "expo-router",
       "expo-status-bar",

@@ -3,6 +3,7 @@
 App minimalista en React Native (Expo, Managed Workflow) para donar Tzedaká en segundos para [ISEJ](https://www.isej.com/): elegís un monto, ves una moneda cayendo en la alcancía, y te redirige a Mercado Pago para completar el pago.
 
 Repo: https://github.com/migdalsheindi-dot/tzedaka-app
+Demo web pública (para probar el diseño/flujo desde cualquier navegador — no reemplaza la app nativa): https://migdalsheindi-dot.github.io/tzedaka-app/
 
 ## Estructura del proyecto
 
@@ -72,6 +73,22 @@ doné" es una confirmación manual del usuario, no una verificación real del
 pago. Para eso hace falta una Fase 2 con backend + webhooks de Mercado
 Pago (ver más abajo).
 
+
+## Cómo republicar la demo web (GitHub Pages)
+
+La demo pública es un build estático (`expo export -p web`) publicado en la
+rama `gh-pages` del repo, separada del código fuente en `main`. Para
+actualizarla después de un cambio:
+
+```bash
+npx expo export -p web
+touch dist/.nojekyll        # sin esto, GitHub ignora la carpeta _expo
+cp dist/index.html dist/404.html   # fallback para rutas al recargar (SPA)
+npx gh-pages -d dist -b gh-pages --dotfiles
+```
+
+El flag `--dotfiles` es obligatorio: sin él, `gh-pages` excluye `.nojekyll`
+y el sitio queda roto (pantalla en blanco, bundle JS con 404).
 
 ## Cómo probar la app en iOS y Android en simultáneo
 
