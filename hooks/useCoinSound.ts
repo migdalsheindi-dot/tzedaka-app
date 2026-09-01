@@ -1,0 +1,19 @@
+import { useAudioPlayer } from 'expo-audio';
+import { useCallback } from 'react';
+
+const coinDropSource = require('../assets/sounds/coin-drop.wav');
+
+export function useCoinSound() {
+  const player = useAudioPlayer(coinDropSource);
+
+  const playCoinSound = useCallback(async () => {
+    try {
+      await player.seekTo(0);
+      player.play();
+    } catch {
+      // El sonido es un detalle decorativo: si falla, la donación sigue su curso.
+    }
+  }, [player]);
+
+  return { playCoinSound };
+}
