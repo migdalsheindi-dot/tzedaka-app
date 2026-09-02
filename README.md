@@ -45,18 +45,24 @@ tzedaka-app/
    que la moneda impacta la pila, no al tocar el botón. Para los 5 montos
    fijos, la donación ya se guarda en ese momento (AsyncStorage + total de
    "Mi Impacto").
-3. Apenas termina la animación, redirige automáticamente a Mercado Pago
-   (`Linking.openURL`, que abre la app nativa si está instalada o el
-   navegador si no) — sin pantallas intermedias ni confirmaciones:
-   - **Monto fijo** ($500 / $1.000 / $2.000 / $5.000 / $10.000): va directo
-     al checkout rápido de ese monto (`utils/mercadopago.ts`), ya armado y
-     listo para pagar sin tipear nada.
-   - **"Otro monto":** no pide teclado ni cantidad dentro de la app — va
-     directo al link base de ISEJ
-     (`https://link.mercadopago.com.ar/isej770`), donde la persona ingresa
-     el monto en el checkout de Mercado Pago. Como el monto no se conoce
-     dentro de la app, este caso no se suma a "Mi Impacto" (solo se
-     muestra la animación como agradecimiento).
+3. Apenas termina la animación, redirige automáticamente al link único de
+   Mercado Pago de ISEJ (`https://link.mercadopago.com.ar/isej770`,
+   `utils/mercadopago.ts`) — tanto los montos fijos como "Otro monto"
+   van al mismo link, donde la persona ingresa/confirma el monto en el
+   checkout de Mercado Pago. Como el monto de "Otro monto" no se conoce
+   dentro de la app, ese caso no se suma a "Mi Impacto" (solo se muestra
+   la animación como agradecimiento).
+
+   En web, la redirección navega la misma pestaña (`window.location.href`)
+   en vez de abrir una nueva — abrir una pestaña nueva con delay (recién al
+   terminar la animación) es bloqueado como popup en varios navegadores
+   mobile. En iOS/Android nativo usa `Linking.openURL`, que abre la app de
+   Mercado Pago si está instalada o el navegador si no.
+
+   **Nota:** se probó también con un link corto distinto por cada monto
+   fijo (`mpago.la/...`), pero en algunos celulares esos links abrían la
+   app de Mercado Libre en vez de Mercado Pago, o pedían iniciar sesión
+   primero — por eso se volvió al link único, que es más consistente.
 
 **Límite conocido (Fase 1, sin backend):** no hay forma de verificar que
 el pago en Mercado Pago se completó realmente — se cuenta como donación
