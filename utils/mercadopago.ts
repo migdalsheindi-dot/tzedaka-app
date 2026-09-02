@@ -27,15 +27,29 @@ export function getQuickCheckoutUrl(amount: number): string | null {
 }
 
 /**
- * Abre una URL de Mercado Pago. En iOS y Android, Linking.openURL ya
+ * Abre una URL de Mercado Pago.
+ *
+ * En web, `Linking.openURL` abre una pestaña nueva vía `window.open`, que
+ * los navegadores (sobre todo en mobile) bloquean como popup cuando se
+ * llama con delay — como acá, que se dispara recién al terminar la
+ * animación de la moneda, no en el instante del click. Por eso en web
+ * navegamos la misma pestaña (`window.location.href`), que no se bloquea.
+ *
+ * En iOS y Android nativo, `Linking.openURL` no tiene esa restricción y ya
  * resuelve automáticamente a la app nativa de Mercado Pago si está
- * instalada, o al navegador si no lo está — no hace falta lógica de
- * plataforma adicional.
+ * instalada, o al navegador si no lo está.
  */
 async function openMercadoPagoUrl(url: string): Promise<boolean> {
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined') {
+      window.location.href = url;
+    }
+    return true;
+  }
+
   try {
     const canOpen = await Linking.canOpenURL(url);
-    if (!canOpen && Platform.OS !== 'web') {
+    if (!canOpen) {
       Alert.alert(
         'No se pudo abrir Mercado Pago',
         'Verificá tu conexión a internet e intentá nuevamente.'
