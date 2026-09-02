@@ -9,7 +9,7 @@ import { TzedakaBox } from '../../components/TzedakaBox';
 import { useDonations } from '../../hooks/useDonations';
 import { formatARS } from '../../utils/currency';
 import { JAR_VIEWBOX_HEIGHT, JAR_VIEWBOX_WIDTH } from '../../utils/jarGeometry';
-import { openMercadoPagoCustomAmount, openMercadoPagoDonation } from '../../utils/mercadopago';
+import { openMercadoPagoDonation } from '../../utils/mercadopago';
 
 const QUICK_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 const JAR_ASPECT_RATIO = JAR_VIEWBOX_HEIGHT / JAR_VIEWBOX_WIDTH;
@@ -39,14 +39,13 @@ export default function DonateScreen() {
   }, [donations.length]);
 
   // Monto fijo: se registra el aporte de inmediato (la moneda ya cae en la
-  // pila real) y, apenas termina la animación, redirige al checkout
-  // específico de ese monto.
+  // pila real) y, apenas termina la animación, redirige a Mercado Pago.
   const startDonation = useCallback(
     async (amount: number) => {
       if (isProcessing) return;
       setIsProcessing(true);
 
-      pendingRedirectRef.current = () => openMercadoPagoDonation(amount);
+      pendingRedirectRef.current = () => openMercadoPagoDonation();
       playDropAnimation();
       await addDonation(amount);
     },
@@ -55,12 +54,12 @@ export default function DonateScreen() {
 
   // "Otro monto": no se conoce el monto dentro de la app, así que no se
   // registra en Mi Impacto — solo se muestra la animación como feedback y
-  // se redirige al link base para que la persona lo complete en Mercado Pago.
+  // se redirige a Mercado Pago para que la persona lo complete ahí.
   const startCustomDonation = useCallback(() => {
     if (isProcessing) return;
     setIsProcessing(true);
 
-    pendingRedirectRef.current = () => openMercadoPagoCustomAmount();
+    pendingRedirectRef.current = () => openMercadoPagoDonation();
     playDropAnimation();
   }, [isProcessing, playDropAnimation]);
 

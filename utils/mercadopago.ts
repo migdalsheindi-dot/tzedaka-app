@@ -1,30 +1,16 @@
 import { Alert, Linking, Platform } from 'react-native';
 
 /**
- * Link base de cobro de Mercado Pago de ISEJ, para "Otro monto": el usuario
- * ingresa la cantidad directamente en el checkout de Mercado Pago.
+ * Link de cobro de Mercado Pago de ISEJ. El usuario ingresa/confirma el
+ * monto en el checkout de Mercado Pago.
+ *
+ * Antes se usaba un link corto (`mpago.la/...`) distinto por cada monto
+ * fijo, pero esos links a veces abrían la app de Mercado Libre en vez de
+ * Mercado Pago (o pedían iniciar sesión primero) en algunos celulares — se
+ * volvió a este único link base, que redirige directo y de forma
+ * consistente.
  */
 export const MERCADOPAGO_BASE_URL = 'https://link.mercadopago.com.ar/isej770';
-
-/**
- * Checkouts rápidos de Mercado Pago, uno por cada monto fijo, ya armados y
- * listos para pagar sin que el usuario tenga que tipear nada.
- */
-const MERCADOPAGO_QUICK_LINKS: Record<number, string> = {
-  500: 'https://mpago.la/1z1jJzT',
-  1000: 'https://mpago.la/2eaercD',
-  2000: 'https://mpago.la/1hAk8uu',
-  5000: 'https://mpago.la/1psWXZf',
-  10000: 'https://mpago.la/1ZHFDPq',
-};
-
-/**
- * Devuelve el link de Mercado Pago del checkout rápido para un monto fijo,
- * o `null` si el monto no tiene un link propio (usar el link base en ese caso).
- */
-export function getQuickCheckoutUrl(amount: number): string | null {
-  return MERCADOPAGO_QUICK_LINKS[Math.round(amount)] ?? null;
-}
 
 /**
  * Abre una URL de Mercado Pago.
@@ -67,13 +53,7 @@ async function openMercadoPagoUrl(url: string): Promise<boolean> {
   }
 }
 
-/** Abre el checkout rápido del monto fijo elegido. */
-export async function openMercadoPagoDonation(amount: number): Promise<boolean> {
-  const url = getQuickCheckoutUrl(amount) ?? MERCADOPAGO_BASE_URL;
-  return openMercadoPagoUrl(url);
-}
-
-/** Abre el link base de Mercado Pago para que el usuario ingrese su propio monto. */
-export async function openMercadoPagoCustomAmount(): Promise<boolean> {
+/** Abre el link de Mercado Pago para completar la donación. */
+export async function openMercadoPagoDonation(): Promise<boolean> {
   return openMercadoPagoUrl(MERCADOPAGO_BASE_URL);
 }
