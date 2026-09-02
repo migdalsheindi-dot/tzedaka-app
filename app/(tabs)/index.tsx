@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,7 +6,6 @@ import { AmountButton } from '../../components/AmountButton';
 import { CoinAnimation } from '../../components/CoinAnimation';
 import { IsejHeader } from '../../components/IsejHeader';
 import { TzedakaBox } from '../../components/TzedakaBox';
-import { useCoinSound } from '../../hooks/useCoinSound';
 import { useDonations } from '../../hooks/useDonations';
 import { formatARS } from '../../utils/currency';
 import { JAR_VIEWBOX_HEIGHT, JAR_VIEWBOX_WIDTH } from '../../utils/jarGeometry';
@@ -19,7 +17,6 @@ const JAR_ASPECT_RATIO = JAR_VIEWBOX_HEIGHT / JAR_VIEWBOX_WIDTH;
 export default function DonateScreen() {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { donations, addDonation } = useDonations();
-  const { playCoinSound } = useCoinSound();
 
   const [dropTrigger, setDropTrigger] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -34,12 +31,12 @@ export default function DonateScreen() {
   const jarSize = Math.min(jarByWidth, jarByHeight, 430);
   const jarHeight = jarSize * JAR_ASPECT_RATIO;
 
+  // El sonido y la vibración se disparan dentro de CoinAnimation, justo en
+  // el instante del impacto visual — acá solo se dispara la caída.
   const playDropAnimation = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    playCoinSound();
     nextCoinIndexRef.current = donations.length;
     setDropTrigger((prev) => prev + 1);
-  }, [playCoinSound, donations.length]);
+  }, [donations.length]);
 
   // Monto fijo: se registra el aporte de inmediato (la moneda ya cae en la
   // pila real) y, apenas termina la animación, redirige al checkout

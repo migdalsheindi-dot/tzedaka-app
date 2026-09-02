@@ -32,7 +32,7 @@ tzedaka-app/
     impact.ts                  Umbrales y textos de impacto (editar con datos reales)
     jarGeometry.ts              Geometría compartida de la alcancía y la pila de monedas
   assets/
-    sounds/coin-drop.wav       Sonido corto de moneda cayendo (sintetizado)
+    sounds/coin-drop.mp3       Sonido de moneda cayendo ("Gold coin prize", Mixkit, licencia libre)
     isej/                       Logo y fotos reales de ISEJ (isej.com), usados en el header y la galería
 ```
 
@@ -40,8 +40,11 @@ tzedaka-app/
 
 1. El usuario toca un monto rápido ($500 a $10.000) o "Otro monto".
 2. Se dispara de inmediato la animación de la moneda cayendo en la
-   alcancía con el sonido (~700ms). Para los 5 montos fijos, la donación
-   ya se guarda en ese momento (AsyncStorage + total de "Mi Impacto").
+   alcancía (~1.6s, `components/CoinAnimation.tsx`). El sonido y la
+   vibración (`expo-haptics`) se disparan juntos justo en el instante en
+   que la moneda impacta la pila, no al tocar el botón. Para los 5 montos
+   fijos, la donación ya se guarda en ese momento (AsyncStorage + total de
+   "Mi Impacto").
 3. Apenas termina la animación, redirige automáticamente a Mercado Pago
    (`Linking.openURL`, que abre la app nativa si está instalada o el
    navegador si no) — sin pantallas intermedias ni confirmaciones:
@@ -135,6 +138,6 @@ npm run web       # preview rápido en navegador (útil para iterar UI)
   de que el pago en Mercado Pago se haya completado. Para eso hace falta
   una futura Fase 2 con backend + webhooks de Mercado Pago (Checkout
   Pro/API, no los links de cobro actuales).
-- El sonido de moneda (`assets/sounds/coin-drop.wav`) es sintetizado
-  (`scripts` no incluidos en el repo) — reemplazalo por una grabación real
-  si querés un realismo mayor.
+- El sonido de moneda (`assets/sounds/coin-drop.mp3`) es "Gold coin prize"
+  de [Mixkit](https://mixkit.co/free-sound-effects/coin/) — de uso libre
+  comercial, sin atribución obligatoria.

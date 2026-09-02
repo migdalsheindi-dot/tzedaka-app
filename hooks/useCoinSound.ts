@@ -1,7 +1,7 @@
 import { useAudioPlayer } from 'expo-audio';
 import { useCallback } from 'react';
 
-const coinDropSource = require('../assets/sounds/coin-drop.wav');
+const coinDropSource = require('../assets/sounds/coin-drop.mp3');
 
 export function useCoinSound() {
   const player = useAudioPlayer(coinDropSource);
