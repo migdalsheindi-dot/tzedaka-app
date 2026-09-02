@@ -1,59 +1,39 @@
-import { Alert, Linking, Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 
-/**
- * Link de cobro de Mercado Pago de ISEJ. El usuario ingresa/confirma el
- * monto en el checkout de Mercado Pago.
- *
- * Antes se usaba un link corto (`mpago.la/...`) distinto por cada monto
- * fijo, pero esos links a veces abrían la app de Mercado Libre en vez de
- * Mercado Pago (o pedían iniciar sesión primero) en algunos celulares — se
- * volvió a este único link base, que redirige directo y de forma
- * consistente.
- */
+/** Checkout de Mercado Pago listo para pagar, uno por cada monto fijo. */
+const MERCADOPAGO_QUICK_LINKS: Record<number, string> = {
+  500: 'https://mpago.la/1z1jJzT',
+  1000: 'https://mpago.la/2eaercD',
+  2000: 'https://mpago.la/1hAk8uu',
+  5000: 'https://mpago.la/1psWXZf',
+  10000: 'https://mpago.la/1ZHFDPq',
+};
+
+/** Link base de cobro de Mercado Pago, para "Otro monto". */
 export const MERCADOPAGO_BASE_URL = 'https://link.mercadopago.com.ar/isej770';
 
-/**
- * Abre una URL de Mercado Pago.
- *
- * En web, `Linking.openURL` abre una pestaña nueva vía `window.open`, que
- * los navegadores (sobre todo en mobile) bloquean como popup cuando se
- * llama con delay — como acá, que se dispara recién al terminar la
- * animación de la moneda, no en el instante del click. Por eso en web
- * navegamos la misma pestaña (`window.location.href`), que no se bloquea.
- *
- * En iOS y Android nativo, `Linking.openURL` no tiene esa restricción y ya
- * resuelve automáticamente a la app nativa de Mercado Pago si está
- * instalada, o al navegador si no lo está.
- */
-async function openMercadoPagoUrl(url: string): Promise<boolean> {
+/** Abre `Linking.openURL` directo, sin pasos intermedios. */
+async function openUrl(url: string): Promise<void> {
+  // En web, `Linking.openURL` abre una pestaña nueva vía `window.open`,
+  // que los navegadores mobile bloquean como popup si se llama con delay
+  // (recién al terminar la animación, no en el instante del click). Por
+  // eso en web se navega la misma pestaña en vez de abrir una nueva.
   if (Platform.OS === 'web') {
     if (typeof window !== 'undefined') {
       window.location.href = url;
     }
-    return true;
+    return;
   }
-
-  try {
-    const canOpen = await Linking.canOpenURL(url);
-    if (!canOpen) {
-      Alert.alert(
-        'No se pudo abrir Mercado Pago',
-        'Verificá tu conexión a internet e intentá nuevamente.'
-      );
-      return false;
-    }
-    await Linking.openURL(url);
-    return true;
-  } catch (error) {
-    Alert.alert(
-      'No se pudo abrir Mercado Pago',
-      'Ocurrió un problema al intentar redirigirte. Intentá nuevamente.'
-    );
-    return false;
-  }
+  await Linking.openURL(url);
 }
 
-/** Abre el link de Mercado Pago para completar la donación. */
-export async function openMercadoPagoDonation(): Promise<boolean> {
-  return openMercadoPagoUrl(MERCADOPAGO_BASE_URL);
+/** Abre el checkout de Mercado Pago del monto fijo elegido. */
+export async function openMercadoPagoDonation(amount: number): Promise<void> {
+  const url = MERCADOPAGO_QUICK_LINKS[Math.round(amount)] ?? MERCADOPAGO_BASE_URL;
+  await openUrl(url);
+}
+
+/** Abre el link base de Mercado Pago para que el usuario ingrese su propio monto. */
+export async function openMercadoPagoCustomAmount(): Promise<void> {
+  await openUrl(MERCADOPAGO_BASE_URL);
 }

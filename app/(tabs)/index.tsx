@@ -9,7 +9,7 @@ import { TzedakaBox } from '../../components/TzedakaBox';
 import { useDonations } from '../../hooks/useDonations';
 import { formatARS } from '../../utils/currency';
 import { JAR_VIEWBOX_HEIGHT, JAR_VIEWBOX_WIDTH } from '../../utils/jarGeometry';
-import { openMercadoPagoDonation } from '../../utils/mercadopago';
+import { openMercadoPagoCustomAmount, openMercadoPagoDonation } from '../../utils/mercadopago';
 
 const QUICK_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 const JAR_ASPECT_RATIO = JAR_VIEWBOX_HEIGHT / JAR_VIEWBOX_WIDTH;
@@ -22,7 +22,7 @@ export default function DonateScreen() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const nextCoinIndexRef = useRef(0);
-  const pendingRedirectRef = useRef<(() => Promise<boolean>) | null>(null);
+  const pendingRedirectRef = useRef<(() => Promise<void>) | null>(null);
 
   // La Tzedaká es el elemento central: ocupa casi todo el ancho disponible,
   // limitada por la altura para que siempre entre en pantalla sin scroll.
@@ -45,7 +45,7 @@ export default function DonateScreen() {
       if (isProcessing) return;
       setIsProcessing(true);
 
-      pendingRedirectRef.current = () => openMercadoPagoDonation();
+      pendingRedirectRef.current = () => openMercadoPagoDonation(amount);
       playDropAnimation();
       await addDonation(amount);
     },
@@ -59,7 +59,7 @@ export default function DonateScreen() {
     if (isProcessing) return;
     setIsProcessing(true);
 
-    pendingRedirectRef.current = () => openMercadoPagoDonation();
+    pendingRedirectRef.current = () => openMercadoPagoCustomAmount();
     playDropAnimation();
   }, [isProcessing, playDropAnimation]);
 
