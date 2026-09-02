@@ -1,39 +1,38 @@
 import { Alert, Linking, Platform } from 'react-native';
 
 /**
- * Link base de cobro de Mercado Pago de ISEJ. El usuario ingresa/completa
- * el monto manualmente en el checkout — no acepta el monto por query string.
+ * Link base de cobro de Mercado Pago de ISEJ, para "Otro monto": el usuario
+ * ingresa la cantidad directamente en el checkout de Mercado Pago.
  */
 export const MERCADOPAGO_BASE_URL = 'https://link.mercadopago.com.ar/isej770';
 
 /**
- * Checkout rápido de Mercado Pago ya configurado y listo para pagar $1.000
- * directo, sin que el usuario tenga que tipear el monto.
+ * Checkouts rápidos de Mercado Pago, uno por cada monto fijo, ya armados y
+ * listos para pagar sin que el usuario tenga que tipear nada.
  */
-export const MERCADOPAGO_QUICK_1000_URL = 'https://mpago.la/2eaercD';
-const MERCADOPAGO_QUICK_1000_AMOUNT = 1000;
+const MERCADOPAGO_QUICK_LINKS: Record<number, string> = {
+  500: 'https://mpago.la/1z1jJzT',
+  1000: 'https://mpago.la/2eaercD',
+  2000: 'https://mpago.la/1hAk8uu',
+  5000: 'https://mpago.la/1psWXZf',
+  10000: 'https://mpago.la/1ZHFDPq',
+};
 
 /**
- * Devuelve el link de Mercado Pago correspondiente al monto elegido:
- * $1.000 exacto va directo al checkout rápido ya armado; cualquier otro
- * monto (rápido o "Otro monto") va al link base, donde el usuario lo
- * confirma/completa.
+ * Devuelve el link de Mercado Pago del checkout rápido para un monto fijo,
+ * o `null` si el monto no tiene un link propio (usar el link base en ese caso).
  */
-export function getMercadoPagoUrl(amount: number): string {
-  if (Math.round(amount) === MERCADOPAGO_QUICK_1000_AMOUNT) {
-    return MERCADOPAGO_QUICK_1000_URL;
-  }
-  return MERCADOPAGO_BASE_URL;
+export function getQuickCheckoutUrl(amount: number): string | null {
+  return MERCADOPAGO_QUICK_LINKS[Math.round(amount)] ?? null;
 }
 
 /**
- * Abre el link de Mercado Pago que corresponda al monto elegido. En iOS y
- * Android, Linking.openURL ya resuelve automáticamente a la app nativa de
- * Mercado Pago si está instalada, o al navegador si no lo está — no hace
- * falta lógica de plataforma adicional.
+ * Abre una URL de Mercado Pago. En iOS y Android, Linking.openURL ya
+ * resuelve automáticamente a la app nativa de Mercado Pago si está
+ * instalada, o al navegador si no lo está — no hace falta lógica de
+ * plataforma adicional.
  */
-export async function openMercadoPagoDonation(amount: number): Promise<boolean> {
-  const url = getMercadoPagoUrl(amount);
+async function openMercadoPagoUrl(url: string): Promise<boolean> {
   try {
     const canOpen = await Linking.canOpenURL(url);
     if (!canOpen && Platform.OS !== 'web') {
@@ -52,4 +51,15 @@ export async function openMercadoPagoDonation(amount: number): Promise<boolean> 
     );
     return false;
   }
+}
+
+/** Abre el checkout rápido del monto fijo elegido. */
+export async function openMercadoPagoDonation(amount: number): Promise<boolean> {
+  const url = getQuickCheckoutUrl(amount) ?? MERCADOPAGO_BASE_URL;
+  return openMercadoPagoUrl(url);
+}
+
+/** Abre el link base de Mercado Pago para que el usuario ingrese su propio monto. */
+export async function openMercadoPagoCustomAmount(): Promise<boolean> {
+  return openMercadoPagoUrl(MERCADOPAGO_BASE_URL);
 }

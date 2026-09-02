@@ -1,20 +1,17 @@
 import * as Haptics from 'expo-haptics';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, AppStateStatus, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AmountButton } from '../../components/AmountButton';
 import { CoinAnimation } from '../../components/CoinAnimation';
-import { ConfirmDonationModal } from '../../components/ConfirmDonationModal';
-import { CustomAmountModal } from '../../components/CustomAmountModal';
 import { IsejHeader } from '../../components/IsejHeader';
 import { TzedakaBox } from '../../components/TzedakaBox';
 import { useCoinSound } from '../../hooks/useCoinSound';
 import { useDonations } from '../../hooks/useDonations';
-import { usePendingDonation } from '../../hooks/usePendingDonation';
 import { formatARS } from '../../utils/currency';
 import { JAR_VIEWBOX_HEIGHT, JAR_VIEWBOX_WIDTH } from '../../utils/jarGeometry';
-import { openMercadoPagoDonation } from '../../utils/mercadopago';
+import { openMercadoPagoCustomAmount, openMercadoPagoDonation } from '../../utils/mercadopago';
 
 const QUICK_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 const JAR_ASPECT_RATIO = JAR_VIEWBOX_HEIGHT / JAR_VIEWBOX_WIDTH;
@@ -25,14 +22,10 @@ export default function DonateScreen() {
   const { playCoinSound } = useCoinSound();
 
   const [dropTrigger, setDropTrigger] = useState(0);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [confirmVisible, setConfirmVisible] = useState(false);
-  const { pendingAmount, setPendingAmount, clearPendingAmount, restoredFromStorage } =
-    usePendingDonation();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const nextCoinIndexRef = useRef(0);
-  const pendingAmountRef = useRef<number | null>(null);
-  const appStateRef = useRef(AppState.currentState);
+  const pendingRedirectRef = useRef<(() => Promise<boolean>) | null>(null);
 
   // La Tzedaká es el elemento central: ocupa casi todo el ancho disponible,
   // limitada por la altura para que siempre entre en pantalla sin scroll.
@@ -41,71 +34,47 @@ export default function DonateScreen() {
   const jarSize = Math.min(jarByWidth, jarByHeight, 430);
   const jarHeight = jarSize * JAR_ASPECT_RATIO;
 
-  // Mantiene una ref sincronizada para leer el pendiente actual desde
-  // listeners que no se vuelven a suscribir en cada render.
-  useEffect(() => {
-    pendingAmountRef.current = pendingAmount;
-  }, [pendingAmount]);
-
-  // Si había una donación pendiente guardada de una sesión anterior (la app
-  // se cerró del todo mientras el usuario estaba en Mercado Pago), pedimos
-  // la confirmación apenas se abre la app de nuevo.
-  useEffect(() => {
-    if (restoredFromStorage) {
-      setConfirmVisible(true);
-    }
-  }, [restoredFromStorage]);
-
-  // Detecta cuando el usuario vuelve a la app (por ej. después de Mercado
-  // Pago) mientras hay una donación esperando confirmación.
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
-      const cameToForeground =
-        appStateRef.current.match(/inactive|background/) && nextState === 'active';
-      appStateRef.current = nextState;
-      if (cameToForeground && pendingAmountRef.current !== null) {
-        setConfirmVisible(true);
-      }
-    });
-    return () => subscription.remove();
-  }, []);
-
-  const startDonation = useCallback(
-    async (amount: number) => {
-      if (pendingAmountRef.current !== null) return;
-
-      setPendingAmount(amount);
-
-      Haptics.selectionAsync();
-      await openMercadoPagoDonation(amount);
-    },
-    [setPendingAmount]
-  );
-
-  const cancelPendingDonation = useCallback(() => {
-    clearPendingAmount();
-    setConfirmVisible(false);
-  }, [clearPendingAmount]);
-
-  const confirmPendingDonation = useCallback(async () => {
-    const amount = pendingAmountRef.current;
-    if (amount === null) {
-      setConfirmVisible(false);
-      return;
-    }
-
-    setConfirmVisible(false);
-    nextCoinIndexRef.current = donations.length;
-
+  const playDropAnimation = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     playCoinSound();
+    nextCoinIndexRef.current = donations.length;
     setDropTrigger((prev) => prev + 1);
-    await addDonation(amount);
+  }, [playCoinSound, donations.length]);
 
-    clearPendingAmount();
-  }, [donations.length, playCoinSound, addDonation, clearPendingAmount]);
+  // Monto fijo: se registra el aporte de inmediato (la moneda ya cae en la
+  // pila real) y, apenas termina la animación, redirige al checkout
+  // específico de ese monto.
+  const startDonation = useCallback(
+    async (amount: number) => {
+      if (isProcessing) return;
+      setIsProcessing(true);
 
-  const hasPendingDonation = pendingAmount !== null;
+      pendingRedirectRef.current = () => openMercadoPagoDonation(amount);
+      playDropAnimation();
+      await addDonation(amount);
+    },
+    [isProcessing, playDropAnimation, addDonation]
+  );
+
+  // "Otro monto": no se conoce el monto dentro de la app, así que no se
+  // registra en Mi Impacto — solo se muestra la animación como feedback y
+  // se redirige al link base para que la persona lo complete en Mercado Pago.
+  const startCustomDonation = useCallback(() => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
+    pendingRedirectRef.current = () => openMercadoPagoCustomAmount();
+    playDropAnimation();
+  }, [isProcessing, playDropAnimation]);
+
+  const handleDropComplete = useCallback(async () => {
+    const redirect = pendingRedirectRef.current;
+    pendingRedirectRef.current = null;
+    if (redirect) {
+      await redirect();
+    }
+    setIsProcessing(false);
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -120,20 +89,9 @@ export default function DonateScreen() {
             jarSize={jarSize}
             trigger={dropTrigger}
             pileIndex={nextCoinIndexRef.current}
+            onDropComplete={handleDropComplete}
           />
         </View>
-
-        {hasPendingDonation && (
-          <View style={styles.pendingBanner}>
-            <Text style={styles.pendingText}>
-              Confirmá tu donación de {formatARS(pendingAmount ?? 0)} cuando vuelvas de Mercado
-              Pago
-            </Text>
-            <Text style={styles.pendingCancel} onPress={cancelPendingDonation}>
-              Cancelar
-            </Text>
-          </View>
-        )}
       </View>
 
       <View style={styles.amountsGrid}>
@@ -142,32 +100,16 @@ export default function DonateScreen() {
             key={amount}
             label={formatARS(amount)}
             onPress={() => startDonation(amount)}
-            disabled={hasPendingDonation}
+            disabled={isProcessing}
           />
         ))}
         <AmountButton
           label="Otro monto"
           variant="custom"
-          onPress={() => setModalVisible(true)}
-          disabled={hasPendingDonation}
+          onPress={startCustomDonation}
+          disabled={isProcessing}
         />
       </View>
-
-      <CustomAmountModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onConfirm={(amount) => {
-          setModalVisible(false);
-          startDonation(amount);
-        }}
-      />
-
-      <ConfirmDonationModal
-        visible={confirmVisible}
-        amount={pendingAmount ?? 0}
-        onConfirm={confirmPendingDonation}
-        onDeny={cancelPendingDonation}
-      />
     </SafeAreaView>
   );
 }
@@ -190,21 +132,6 @@ const styles = StyleSheet.create({
   },
   boxWrapper: {
     alignSelf: 'center',
-  },
-  pendingBanner: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  pendingText: {
-    fontSize: 13,
-    color: '#6B7690',
-    textAlign: 'center',
-  },
-  pendingCancel: {
-    fontSize: 13,
-    color: '#2F6FED',
-    fontWeight: '700',
-    marginTop: 6,
   },
   amountsGrid: {
     width: '100%',

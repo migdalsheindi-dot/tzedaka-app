@@ -21,13 +21,10 @@ tzedaka-app/
     Coin.tsx                Ilustración SVG de la moneda que cae
     CoinAnimation.tsx       Animación de la moneda cayendo hasta su lugar en la pila (Reanimated)
     AmountButton.tsx        Botón de monto con feedback táctil
-    CustomAmountModal.tsx   Modal "Otro monto"
-    ConfirmDonationModal.tsx Modal "¿Completaste tu donación?" (post Mercado Pago)
     ImpactCard.tsx          Tarjeta de impacto/logro
     ImpactGallery.tsx        Carrusel de fotos de actividades de ISEJ
   hooks/
     useDonations.ts         Persistencia local (AsyncStorage): historial + total
-    usePendingDonation.ts    Donación esperando confirmación (persistida)
     useCoinSound.ts          Reproducción del sonido de moneda (expo-audio)
   utils/
     currency.ts              Formateo de pesos argentinos (ARS)
@@ -41,37 +38,28 @@ tzedaka-app/
 
 ## Flujo de donación
 
-1. El usuario toca un monto rápido ($500 a $10.000) o carga "Otro monto".
-2. Se abre inmediatamente el link de Mercado Pago que corresponda
-   (`utils/mercadopago.ts` → `getMercadoPagoUrl`) con `Linking.openURL`,
-   que abre la app nativa de Mercado Pago si está instalada, o el
-   navegador si no:
-   - **Exactamente $1.000:** va directo al checkout rápido ya armado
-     (`https://mpago.la/2eaercD`), listo para pagar sin tipear nada.
-   - **Cualquier otro monto** (rápido o "Otro monto"): va al link base de
-     ISEJ (`https://link.mercadopago.com.ar/isej770`), donde el usuario
-     ingresa/confirma el monto en el checkout.
+1. El usuario toca un monto rápido ($500 a $10.000) o "Otro monto".
+2. Se dispara de inmediato la animación de la moneda cayendo en la
+   alcancía con el sonido (~700ms). Para los 5 montos fijos, la donación
+   ya se guarda en ese momento (AsyncStorage + total de "Mi Impacto").
+3. Apenas termina la animación, redirige automáticamente a Mercado Pago
+   (`Linking.openURL`, que abre la app nativa si está instalada o el
+   navegador si no) — sin pantallas intermedias ni confirmaciones:
+   - **Monto fijo** ($500 / $1.000 / $2.000 / $5.000 / $10.000): va directo
+     al checkout rápido de ese monto (`utils/mercadopago.ts`), ya armado y
+     listo para pagar sin tipear nada.
+   - **"Otro monto":** no pide teclado ni cantidad dentro de la app — va
+     directo al link base de ISEJ
+     (`https://link.mercadopago.com.ar/isej770`), donde la persona ingresa
+     el monto en el checkout de Mercado Pago. Como el monto no se conoce
+     dentro de la app, este caso no se suma a "Mi Impacto" (solo se
+     muestra la animación como agradecimiento).
 
-   **Todavía no se suma nada** en este paso: ni la moneda ni el monto se
-   registran hasta confirmar el pago (paso 3).
-3. Cuando el usuario vuelve a la app (Mercado Pago se cierra o la app pasa
-   a primer plano de nuevo) aparece el modal "¿Completaste tu donación?".
-   - **Sí, ya doné:** recién ahí se dispara la animación de la moneda
-     cayendo hasta su lugar en la pila (queda guardada, visible detrás del
-     vidrio), se guarda la donación en AsyncStorage y se suma al total de
-     "Mi Impacto".
-   - **Todavía no / Cancelar:** no se registra nada, la app queda como
-     estaba antes de tocar el monto.
-4. Si la app se cierra del todo mientras el usuario está en Mercado Pago
-   (no solo pasa a background), el monto pendiente queda persistido
-   (`usePendingDonation`) y se vuelve a pedir la confirmación apenas se
-   reabre la app — no se pierde silenciosamente.
-
-**Límite conocido (Fase 1, sin backend):** no hay forma de verificar
-criptográficamente que el pago en Mercado Pago se completó — el "Sí, ya
-doné" es una confirmación manual del usuario, no una verificación real del
-pago. Para eso hace falta una Fase 2 con backend + webhooks de Mercado
-Pago (ver más abajo).
+**Límite conocido (Fase 1, sin backend):** no hay forma de verificar que
+el pago en Mercado Pago se completó realmente — se cuenta como donación
+en cuanto se toca el monto, no cuando se confirma el pago del otro lado.
+Para eso hace falta una Fase 2 con backend + webhooks de Mercado Pago
+(ver más abajo).
 
 
 ## Cómo republicar la demo web (GitHub Pages)
@@ -143,8 +131,10 @@ npm run web       # preview rápido en navegador (útil para iterar UI)
 - Los umbrales y textos de `utils/impact.ts` ("con $X ayudaste a...") son
   ilustrativos: ajustalos con los valores reales de la organización.
 - El total y el historial de donaciones son **locales al dispositivo**
-  (AsyncStorage) — no hay backend ni verificación real de que el pago en
-  Mercado Pago se completó; se confía en que el usuario confirme
-  honestamente con "Sí, ya doné". Para verificación real hace falta una
-  futura Fase 2 con backend + webhooks de Mercado Pago (Checkout Pro/API,
-  no el link de cobro actual).
+  (AsyncStorage) — se registran al tocar el monto, no hay verificación real
+  de que el pago en Mercado Pago se haya completado. Para eso hace falta
+  una futura Fase 2 con backend + webhooks de Mercado Pago (Checkout
+  Pro/API, no los links de cobro actuales).
+- El sonido de moneda (`assets/sounds/coin-drop.wav`) es sintetizado
+  (`scripts` no incluidos en el repo) — reemplazalo por una grabación real
+  si querés un realismo mayor.
