@@ -1,9 +1,7 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { colors, fonts, radius } from '../theme';
 
 type Props = {
   label: string;
@@ -14,31 +12,40 @@ type Props = {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+/** Botón de monto pensado para ir sobre el fondo azul del hero. */
 export function AmountButton({ label, onPress, variant = 'amount', disabled }: Props) {
   const scale = useSharedValue(1);
+  const [hovered, setHovered] = useState(false);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
+  const isCustom = variant === 'custom';
+
   return (
     <AnimatedPressable
+      accessibilityRole="button"
+      accessibilityLabel={isCustom ? 'Donar otro monto' : `Donar ${label}`}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
       onPressIn={() => {
-        scale.value = withTiming(0.94, { duration: 90 });
+        scale.value = withSpring(0.95, { damping: 18, stiffness: 400 });
       }}
       onPressOut={() => {
-        scale.value = withTiming(1, { duration: 120 });
+        scale.value = withSpring(1, { damping: 14, stiffness: 300 });
       }}
       onPress={onPress}
       disabled={disabled}
       style={[
         styles.button,
-        variant === 'custom' && styles.customButton,
+        isCustom ? styles.custom : styles.solid,
+        hovered && !disabled && (isCustom ? styles.customHover : styles.solidHover),
         disabled && styles.disabled,
         animatedStyle,
       ]}
     >
-      <Text style={[styles.label, variant === 'custom' && styles.customLabel]}>{label}</Text>
+      <Text style={[styles.label, isCustom ? styles.customLabel : styles.solidLabel]}>{label}</Text>
     </AnimatedPressable>
   );
 }
@@ -49,25 +56,44 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingVertical: 16,
     paddingHorizontal: 12,
-    borderRadius: 18,
-    backgroundColor: '#2F6FED',
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  customButton: {
-    backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: '#2F6FED',
+    cursor: 'pointer',
+  },
+  solid: {
+    backgroundColor: colors.card,
+    borderColor: colors.card,
+    boxShadow: '0px 6px 18px rgba(0, 0, 0, 0.25)',
+  },
+  solidHover: {
+    backgroundColor: colors.goldSoft,
+    borderColor: colors.gold,
+    boxShadow: '0px 10px 26px rgba(242, 184, 75, 0.45)',
+  },
+  custom: {
+    backgroundColor: colors.glass,
+    borderColor: colors.glassBorder,
+  },
+  customHover: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderColor: colors.onDark,
   },
   disabled: {
     opacity: 0.5,
   },
   label: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '700',
+    fontFamily: fonts.extrabold,
+    fontSize: 18,
+    letterSpacing: -0.2,
+  },
+  solidLabel: {
+    color: colors.navy800,
   },
   customLabel: {
-    color: '#2F6FED',
+    color: colors.onDark,
+    fontFamily: fonts.bold,
+    fontSize: 16,
   },
 });

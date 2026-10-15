@@ -9,6 +9,7 @@ Demo web pública (para probar el diseño/flujo desde cualquier navegador — no
 
 ```
 tzedaka-app/
+  theme.ts                 Sistema de diseño: paleta, tipografía (Inter), radios, sombras, breakpoints
   app/                    Rutas (Expo Router)
     _layout.tsx           Layout raíz (Stack + providers)
     (tabs)/
@@ -16,13 +17,17 @@ tzedaka-app/
       index.tsx            Pantalla principal (donación rápida)
       impact.tsx            Pantalla "Mi Impacto"
   components/
-    IsejHeader.tsx          Logo de ISEJ + frase motivacional de encabezado
-    TzedakaBox.tsx         Ilustración SVG de la alcancía (jarra transparente + tapa/base de madera, etiqueta en español)
+    DonationHero.tsx        Hero: propuesta de valor + alcancía + montos (layout 2 columnas en desktop)
+    JarStage.tsx            La alcancía con su halo dorado y la moneda que cae
+    TzedakaBox.tsx          Ilustración SVG de la alcancía (jarra transparente + tapa/base de madera)
+    CoinAnimation.tsx       Caída de la moneda hasta su lugar en la pila + sonido/vibración al impacto
+    AmountButton.tsx        Botón de monto (hover + micro-interacción de resorte)
+    InfoSections.tsx        Cómo funciona, Sobre ISEJ, señales de confianza y footer
+    ImpactGallery.tsx       Carrusel de fotos de actividades de ISEJ
+    ImpactCard.tsx          Tarjeta de logro de impacto
+    IsejHeader.tsx          Barra superior de marca (logo de ISEJ)
+    layout.tsx              Container, SectionHeader y hook de responsividad (useIsWide)
     Coin.tsx                Ilustración SVG de la moneda que cae
-    CoinAnimation.tsx       Animación de la moneda cayendo hasta su lugar en la pila (Reanimated)
-    AmountButton.tsx        Botón de monto con feedback táctil
-    ImpactCard.tsx          Tarjeta de impacto/logro
-    ImpactGallery.tsx        Carrusel de fotos de actividades de ISEJ
   hooks/
     useDonations.ts         Persistencia local (AsyncStorage): historial + total
     useCoinSound.ts          Reproducción del sonido de moneda (expo-audio)

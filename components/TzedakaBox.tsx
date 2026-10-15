@@ -119,36 +119,38 @@ export function TzedakaBox({ size = 220, coinCount = 0 }: Props) {
 
       {/* Etiqueta con la marca, pegada al frente del vidrio */}
       <Rect
-        x="63"
-        y="118"
-        width="94"
-        height="46"
+        x="60"
+        y="116"
+        width="100"
+        height="48"
         rx="10"
         fill="#FBF7EF"
-        opacity={0.96}
+        opacity={0.97}
         stroke="#E4D9C2"
         strokeWidth={1}
       />
       <SvgText
         x="110"
-        y="144"
-        fontSize="19"
+        y="141"
+        fontSize="16"
+        fontFamily="Inter_800ExtraBold"
         fontWeight="800"
-        fill="#16213E"
+        fill="#0F1B33"
         textAnchor="middle"
-        letterSpacing={0.5}
+        letterSpacing={0.4}
       >
         TZEDAKÁ
       </SvgText>
-      <Rect x="88" y="151" width="44" height="2.5" rx="1.25" fill="#D0271D" />
+      <Rect x="90" y="147" width="40" height="2.5" rx="1.25" fill="#D0271D" />
       <SvgText
         x="110"
-        y="161"
-        fontSize="8"
+        y="158"
+        fontSize="6.5"
+        fontFamily="Inter_600SemiBold"
         fontWeight="600"
-        fill="#8A8370"
+        fill="#7A7360"
         textAnchor="middle"
-        letterSpacing={1}
+        letterSpacing={0.7}
       >
         CAJA DE DONACIONES
       </SvgText>

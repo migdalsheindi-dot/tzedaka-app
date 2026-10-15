@@ -1,4 +1,6 @@
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { colors, fonts, radius, shadows, spacing } from '../theme';
+import { Container, SectionHeader, useIsWide } from './layout';
 
 type GalleryItem = {
   id: string;
@@ -14,25 +16,30 @@ const GALLERY_ITEMS: GalleryItem[] = [
   { id: 'extra2', source: require('../assets/isej/gallery-extra2.jpg'), caption: 'Encuentros ISEJ' },
 ];
 
-const CARD_WIDTH = 200;
-const CARD_HEIGHT = 150;
-
+/** Carrusel de fotos reales de las actividades de ISEJ. */
 export function ImpactGallery() {
+  const { isWide } = useIsWide();
+  const cardWidth = isWide ? 300 : 232;
+  const cardHeight = isWide ? 380 : 300;
+  const gutter = isWide ? spacing.xl : spacing.md;
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>La comunidad en acción</Text>
-      <Text style={styles.subtitle}>
-        Así se vive ISEJ: viajes, encuentros y proyectos que tu Tzedaká ayuda a sostener.
-      </Text>
+    <Container style={styles.section}>
+      <SectionHeader
+        eyebrow="Impacto visual"
+        title="La comunidad en acción"
+        subtitle="Así se vive ISEJ: viajes, encuentros y proyectos que tu Tzedaká ayuda a sostener."
+      />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        snapToInterval={CARD_WIDTH + 12}
+        snapToInterval={cardWidth + 14}
         decelerationRate="fast"
-        contentContainerStyle={styles.scrollContent}
+        style={{ marginHorizontal: -gutter }}
+        contentContainerStyle={{ paddingHorizontal: gutter, gap: 14, paddingBottom: 24 }}
       >
         {GALLERY_ITEMS.map((item) => (
-          <View key={item.id} style={styles.card}>
+          <View key={item.id} style={[styles.card, { width: cardWidth, height: cardHeight }]}>
             <Image source={item.source} style={styles.image} resizeMode="cover" />
             <View style={styles.captionBar}>
               <Text style={styles.caption}>{item.caption}</Text>
@@ -40,38 +47,19 @@ export function ImpactGallery() {
           </View>
         ))}
       </ScrollView>
-    </View>
+    </Container>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 8,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#16213E',
-    paddingHorizontal: 24,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#6B7690',
-    paddingHorizontal: 24,
-    marginTop: 4,
-    marginBottom: 14,
-    lineHeight: 18,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    gap: 12,
+  section: {
+    paddingTop: spacing.xl + 8,
   },
   card: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     overflow: 'hidden',
-    backgroundColor: '#E4D9C2',
+    backgroundColor: colors.border,
+    boxShadow: shadows.card,
   },
   image: {
     width: '100%',
@@ -79,16 +67,16 @@ const styles = StyleSheet.create({
   },
   captionBar: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    backgroundColor: 'rgba(22, 33, 62, 0.65)',
+    bottom: 0,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(10, 22, 48, 0.72)',
   },
   caption: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    color: colors.onDark,
   },
 });

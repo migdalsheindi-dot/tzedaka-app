@@ -1,21 +1,18 @@
 import { useCallback, useRef, useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AmountButton } from '../../components/AmountButton';
-import { CoinAnimation } from '../../components/CoinAnimation';
+import { DonationHero } from '../../components/DonationHero';
+import { ImpactGallery } from '../../components/ImpactGallery';
+import { AboutIsej, Footer, HowItWorks, TrustStrip } from '../../components/InfoSections';
 import { IsejHeader } from '../../components/IsejHeader';
-import { TzedakaBox } from '../../components/TzedakaBox';
 import { useDonations } from '../../hooks/useDonations';
-import { formatARS } from '../../utils/currency';
-import { JAR_VIEWBOX_HEIGHT, JAR_VIEWBOX_WIDTH } from '../../utils/jarGeometry';
+import { colors } from '../../theme';
 import { openMercadoPagoCustomAmount, openMercadoPagoDonation } from '../../utils/mercadopago';
 
 const QUICK_AMOUNTS = [500, 1000, 2000, 5000, 10000];
-const JAR_ASPECT_RATIO = JAR_VIEWBOX_HEIGHT / JAR_VIEWBOX_WIDTH;
 
 export default function DonateScreen() {
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { donations, addDonation } = useDonations();
 
   const [dropTrigger, setDropTrigger] = useState(0);
@@ -23,13 +20,6 @@ export default function DonateScreen() {
 
   const nextCoinIndexRef = useRef(0);
   const pendingRedirectRef = useRef<(() => Promise<void>) | null>(null);
-
-  // La Tzedaká es el elemento central: ocupa casi todo el ancho disponible,
-  // limitada por la altura para que siempre entre en pantalla sin scroll.
-  const jarByWidth = (windowWidth - 48) * 0.94;
-  const jarByHeight = (windowHeight * 0.46) / JAR_ASPECT_RATIO;
-  const jarSize = Math.min(jarByWidth, jarByHeight, 430);
-  const jarHeight = jarSize * JAR_ASPECT_RATIO;
 
   // El sonido y la vibración se disparan dentro de CoinAnimation, justo en
   // el instante del impacto visual — acá solo se dispara la caída.
@@ -74,38 +64,24 @@ export default function DonateScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.header}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <IsejHeader />
-      </View>
-
-      <View style={styles.jarArea}>
-        <View style={[styles.boxWrapper, { width: jarSize, height: jarHeight }]}>
-          <TzedakaBox size={jarSize} coinCount={donations.length} />
-          <CoinAnimation
-            jarSize={jarSize}
-            trigger={dropTrigger}
-            pileIndex={nextCoinIndexRef.current}
-            onDropComplete={handleDropComplete}
-          />
-        </View>
-      </View>
-
-      <View style={styles.amountsGrid}>
-        {QUICK_AMOUNTS.map((amount) => (
-          <AmountButton
-            key={amount}
-            label={formatARS(amount)}
-            onPress={() => startDonation(amount)}
-            disabled={isProcessing}
-          />
-        ))}
-        <AmountButton
-          label="Otro monto"
-          variant="custom"
-          onPress={startCustomDonation}
+        <DonationHero
+          amounts={QUICK_AMOUNTS}
+          coinCount={donations.length}
+          dropTrigger={dropTrigger}
+          pileIndex={nextCoinIndexRef.current}
           disabled={isProcessing}
+          onSelectAmount={startDonation}
+          onSelectCustom={startCustomDonation}
+          onDropComplete={handleDropComplete}
         />
-      </View>
+        <HowItWorks />
+        <AboutIsej />
+        <ImpactGallery />
+        <TrustStrip />
+        <Footer />
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -113,29 +89,9 @@ export default function DonateScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F4EFE6',
+    backgroundColor: colors.bg,
   },
-  header: {
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  jarArea: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  boxWrapper: {
-    alignSelf: 'center',
-  },
-  amountsGrid: {
-    width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 20,
+  content: {
+    paddingBottom: 24,
   },
 });
