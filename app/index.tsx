@@ -2,13 +2,12 @@ import { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { DonationHero } from '../../components/DonationHero';
-import { ImpactGallery } from '../../components/ImpactGallery';
-import { AboutIsej, Footer, HowItWorks, TrustStrip } from '../../components/InfoSections';
-import { IsejHeader } from '../../components/IsejHeader';
-import { useDonations } from '../../hooks/useDonations';
-import { colors } from '../../theme';
-import { openMercadoPagoCustomAmount, openMercadoPagoDonation } from '../../utils/mercadopago';
+import { AboutIsej, Footer } from '../components/AboutIsej';
+import { DonationSection } from '../components/DonationSection';
+import { IsejHeader } from '../components/IsejHeader';
+import { useDonations } from '../hooks/useDonations';
+import { colors } from '../theme';
+import { openMercadoPagoCustomAmount, openMercadoPagoDonation } from '../utils/mercadopago';
 
 const QUICK_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 
@@ -28,8 +27,8 @@ export default function DonateScreen() {
     setDropTrigger((prev) => prev + 1);
   }, [donations.length]);
 
-  // Monto fijo: se registra el aporte de inmediato (la moneda ya cae en la
-  // pila real) y, apenas termina la animación, redirige a Mercado Pago.
+  // Monto fijo: la moneda cae en la pila real y, apenas termina la
+  // animación, redirige directo a Mercado Pago.
   const startDonation = useCallback(
     async (amount: number) => {
       if (isProcessing) return;
@@ -42,9 +41,8 @@ export default function DonateScreen() {
     [isProcessing, playDropAnimation, addDonation]
   );
 
-  // "Otro monto": no se conoce el monto dentro de la app, así que no se
-  // registra en Mi Impacto — solo se muestra la animación como feedback y
-  // se redirige a Mercado Pago para que la persona lo complete ahí.
+  // "Otro monto": se muestra la animación y se redirige a Mercado Pago para
+  // que la persona ingrese ahí la cantidad.
   const startCustomDonation = useCallback(() => {
     if (isProcessing) return;
     setIsProcessing(true);
@@ -66,7 +64,7 @@ export default function DonateScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <IsejHeader />
-        <DonationHero
+        <DonationSection
           amounts={QUICK_AMOUNTS}
           coinCount={donations.length}
           dropTrigger={dropTrigger}
@@ -76,10 +74,7 @@ export default function DonateScreen() {
           onSelectCustom={startCustomDonation}
           onDropComplete={handleDropComplete}
         />
-        <HowItWorks />
         <AboutIsej />
-        <ImpactGallery />
-        <TrustStrip />
         <Footer />
       </ScrollView>
     </SafeAreaView>
@@ -89,7 +84,7 @@ export default function DonateScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.ivory,
   },
   content: {
     paddingBottom: 24,

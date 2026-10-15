@@ -1,5 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { colors, fonts, radius } from '../theme';
 
@@ -12,7 +13,7 @@ type Props = {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-/** Botón de monto pensado para ir sobre el fondo azul del hero. */
+/** Tarjeta de monto: blanca y limpia, se invierte a medianoche al pasar el mouse. */
 export function AmountButton({ label, onPress, variant = 'amount', disabled }: Props) {
   const scale = useSharedValue(1);
   const [hovered, setHovered] = useState(false);
@@ -22,6 +23,7 @@ export function AmountButton({ label, onPress, variant = 'amount', disabled }: P
   }));
 
   const isCustom = variant === 'custom';
+  const active = hovered && !disabled;
 
   return (
     <AnimatedPressable
@@ -30,7 +32,7 @@ export function AmountButton({ label, onPress, variant = 'amount', disabled }: P
       onHoverIn={() => setHovered(true)}
       onHoverOut={() => setHovered(false)}
       onPressIn={() => {
-        scale.value = withSpring(0.95, { damping: 18, stiffness: 400 });
+        scale.value = withSpring(0.96, { damping: 18, stiffness: 400 });
       }}
       onPressOut={() => {
         scale.value = withSpring(1, { damping: 14, stiffness: 300 });
@@ -39,61 +41,74 @@ export function AmountButton({ label, onPress, variant = 'amount', disabled }: P
       disabled={disabled}
       style={[
         styles.button,
-        isCustom ? styles.custom : styles.solid,
-        hovered && !disabled && (isCustom ? styles.customHover : styles.solidHover),
+        isCustom ? styles.custom : styles.amount,
+        active && styles.active,
         disabled && styles.disabled,
         animatedStyle,
       ]}
     >
-      <Text style={[styles.label, isCustom ? styles.customLabel : styles.solidLabel]}>{label}</Text>
+      <View style={styles.row}>
+        <Text style={[styles.label, isCustom && styles.customLabel, active && styles.activeLabel]}>
+          {label}
+        </Text>
+        {isCustom ? (
+          <Ionicons
+            name="arrow-forward"
+            size={18}
+            color={active ? colors.onDark : colors.goldDeep}
+          />
+        ) : null}
+      </View>
     </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    minWidth: '30%',
     flexGrow: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
+    minHeight: 64,
+    paddingHorizontal: 16,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
+    borderWidth: 1,
     cursor: 'pointer',
   },
-  solid: {
+  amount: {
+    flexBasis: '30%',
     backgroundColor: colors.card,
-    borderColor: colors.card,
-    boxShadow: '0px 6px 18px rgba(0, 0, 0, 0.25)',
-  },
-  solidHover: {
-    backgroundColor: colors.goldSoft,
-    borderColor: colors.gold,
-    boxShadow: '0px 10px 26px rgba(242, 184, 75, 0.45)',
+    borderColor: colors.border,
+    boxShadow: '0px 1px 2px rgba(15, 20, 36, 0.04), 0px 6px 16px rgba(15, 20, 36, 0.05)',
   },
   custom: {
-    backgroundColor: colors.glass,
-    borderColor: colors.glassBorder,
+    flexBasis: '100%',
+    backgroundColor: colors.goldSoft,
+    borderColor: 'transparent',
   },
-  customHover: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderColor: colors.onDark,
+  active: {
+    backgroundColor: colors.midnight,
+    borderColor: colors.midnight,
+    boxShadow: '0px 14px 30px rgba(14, 20, 36, 0.28)',
   },
   disabled: {
     opacity: 0.5,
   },
-  label: {
-    fontFamily: fonts.extrabold,
-    fontSize: 18,
-    letterSpacing: -0.2,
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  solidLabel: {
-    color: colors.navy800,
+  label: {
+    fontFamily: fonts.bold,
+    fontSize: 20,
+    letterSpacing: -0.3,
+    color: colors.ink,
   },
   customLabel: {
-    color: colors.onDark,
-    fontFamily: fonts.bold,
     fontSize: 16,
+    color: colors.goldDeep,
+  },
+  activeLabel: {
+    color: colors.onDark,
   },
 });

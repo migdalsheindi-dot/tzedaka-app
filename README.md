@@ -7,38 +7,36 @@ Demo web pública (para probar el diseño/flujo desde cualquier navegador — no
 
 ## Estructura del proyecto
 
+App de una sola pantalla, minimalista: la Tzedaká, los montos y una reseña breve de ISEJ.
+
 ```
 tzedaka-app/
-  theme.ts                 Sistema de diseño: paleta, tipografía (Inter), radios, sombras, breakpoints
-  app/                    Rutas (Expo Router)
-    _layout.tsx           Layout raíz (Stack + providers)
-    (tabs)/
-      _layout.tsx          Tabs: Donar / Mi Impacto
-      index.tsx            Pantalla principal (donación rápida)
-      impact.tsx            Pantalla "Mi Impacto"
+  theme.ts                 Sistema de diseño: paleta (marfil / medianoche / dorado), tipografía
+                           (Fraunces + Inter), radios, sombras, breakpoints
+  app/
+    _layout.tsx            Layout raíz (fuentes + providers)
+    index.tsx              Pantalla única: lógica de donación
+    +not-found.tsx         Cualquier ruta vieja vuelve al inicio
   components/
-    DonationHero.tsx        Hero: propuesta de valor + alcancía + montos (layout 2 columnas en desktop)
-    JarStage.tsx            La alcancía con su halo dorado y la moneda que cae
-    TzedakaBox.tsx          Ilustración SVG de la alcancía (jarra transparente + tapa/base de madera)
-    CoinAnimation.tsx       Caída de la moneda hasta su lugar en la pila + sonido/vibración al impacto
-    AmountButton.tsx        Botón de monto (hover + micro-interacción de resorte)
-    InfoSections.tsx        Cómo funciona, Sobre ISEJ, señales de confianza y footer
-    ImpactGallery.tsx       Carrusel de fotos de actividades de ISEJ
-    ImpactCard.tsx          Tarjeta de logro de impacto
-    IsejHeader.tsx          Barra superior de marca (logo de ISEJ)
-    layout.tsx              Container, SectionHeader y hook de responsividad (useIsWide)
-    Coin.tsx                Ilustración SVG de la moneda que cae
+    DonationSection.tsx    Título + alcancía + montos (2 columnas en desktop, apilado en móvil)
+    JarStage.tsx           La alcancía con su halo y la moneda que cae
+    TzedakaBox.tsx         Ilustración SVG de la alcancía (jarra transparente + tapa/base de madera)
+    CoinAnimation.tsx      Caída de la moneda hasta su pila + sonido/vibración al impacto
+    Coin.tsx               Ilustración SVG de la moneda
+    AmountButton.tsx       Tarjeta de monto (hover + micro-interacción de resorte)
+    AboutIsej.tsx          Reseña breve de ISEJ + footer
+    IsejHeader.tsx         Barra superior mínima (logo de ISEJ)
+    layout.tsx             Container y hook de responsividad (useIsWide)
   hooks/
-    useDonations.ts         Persistencia local (AsyncStorage): historial + total
-    useCoinSound.ts          Reproducción del sonido de moneda (expo-audio)
+    useDonations.ts        Persistencia local de las monedas de la alcancía (AsyncStorage)
+    useCoinSound.ts        Reproducción del sonido de moneda (expo-audio)
   utils/
-    currency.ts              Formateo de pesos argentinos (ARS)
-    mercadopago.ts            Resuelve el link de Mercado Pago según el monto
-    impact.ts                  Umbrales y textos de impacto (editar con datos reales)
-    jarGeometry.ts              Geometría compartida de la alcancía y la pila de monedas
+    currency.ts            Formateo de pesos argentinos (ARS)
+    mercadopago.ts         Links de Mercado Pago por monto
+    jarGeometry.ts         Geometría compartida de la alcancía y la pila de monedas
   assets/
-    sounds/coin-drop.mp3       Sonido de moneda cayendo ("Gold coin prize", Mixkit, licencia libre)
-    isej/                       Logo y fotos reales de ISEJ (isej.com), usados en el header y la galería
+    sounds/coin-drop.mp3   Sonido de moneda ("Gold coin prize", Mixkit, licencia libre)
+    isej/logo.png          Logo de ISEJ (isej.com)
 ```
 
 ## Flujo de donación
@@ -48,8 +46,7 @@ tzedaka-app/
    alcancía (~1.6s, `components/CoinAnimation.tsx`). El sonido y la
    vibración (`expo-haptics`) se disparan juntos justo en el instante en
    que la moneda impacta la pila, no al tocar el botón. Para los 5 montos
-   fijos, la donación ya se guarda en ese momento (AsyncStorage + total de
-   "Mi Impacto").
+   fijos, la moneda queda guardada en la alcancía (AsyncStorage).
 3. Apenas termina la animación, redirige automáticamente a Mercado Pago
    (`utils/mercadopago.ts`), sin pantallas ni pasos intermedios:
    - **Monto fijo** ($500 / $1.000 / $2.000 / $5.000 / $10.000): va directo
@@ -58,8 +55,7 @@ tzedaka-app/
    - **"Otro monto":** va al link base de ISEJ
      (`https://link.mercadopago.com.ar/isej770`), donde la persona
      ingresa el monto en el checkout. Como ese monto no se conoce dentro
-     de la app, este caso no se suma a "Mi Impacto" (solo se muestra la
-     animación como agradecimiento).
+     de la app, la moneda solo se anima (no queda guardada en la pila).
 
    En web, la redirección navega la misma pestaña (`window.location.href`)
    en vez de abrir una nueva — abrir una pestaña nueva con delay (recién al
@@ -139,16 +135,11 @@ npm run web       # preview rápido en navegador (útil para iterar UI)
 
 ## Notas para producción
 
-- El logo y las fotos de `assets/isej/` se bajaron del sitio oficial
-  (isej.com) para esta primera versión — reemplazalas por los archivos
-  originales en alta resolución que tenga la institución cuando estén
-  disponibles, y confirmá que las fotos elegidas para la galería sean las
-  que ISEJ quiere mostrar públicamente.
+- El logo de `assets/isej/` se bajó del sitio oficial (isej.com) — reemplazalo
+  por el archivo original en alta resolución cuando esté disponible.
 - Los íconos/splash en `assets/` (afuera de `isej/`) son los placeholders
   que genera Expo — reemplazalos por el branding real antes de publicar.
-- Los umbrales y textos de `utils/impact.ts` ("con $X ayudaste a...") son
-  ilustrativos: ajustalos con los valores reales de la organización.
-- El total y el historial de donaciones son **locales al dispositivo**
+- Las monedas de la alcancía son **locales al dispositivo**
   (AsyncStorage) — se registran al tocar el monto, no hay verificación real
   de que el pago en Mercado Pago se haya completado. Para eso hace falta
   una futura Fase 2 con backend + webhooks de Mercado Pago (Checkout

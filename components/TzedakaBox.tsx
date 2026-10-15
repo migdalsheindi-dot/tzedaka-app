@@ -120,9 +120,9 @@ export function TzedakaBox({ size = 220, coinCount = 0 }: Props) {
       {/* Etiqueta con la marca, pegada al frente del vidrio */}
       <Rect
         x="60"
-        y="116"
+        y="122"
         width="100"
-        height="48"
+        height="38"
         rx="10"
         fill="#FBF7EF"
         opacity={0.97}
@@ -131,32 +131,20 @@ export function TzedakaBox({ size = 220, coinCount = 0 }: Props) {
       />
       <SvgText
         x="110"
-        y="141"
-        fontSize="16"
+        y="146"
+        fontSize="17"
         fontFamily="Inter_800ExtraBold"
         fontWeight="800"
         fill="#0F1B33"
         textAnchor="middle"
-        letterSpacing={0.4}
+        letterSpacing={0.5}
       >
         TZEDAKÁ
       </SvgText>
-      <Rect x="90" y="147" width="40" height="2.5" rx="1.25" fill="#D0271D" />
-      <SvgText
-        x="110"
-        y="158"
-        fontSize="6.5"
-        fontFamily="Inter_600SemiBold"
-        fontWeight="600"
-        fill="#7A7360"
-        textAnchor="middle"
-        letterSpacing={0.7}
-      >
-        CAJA DE DONACIONES
-      </SvgText>
+      <Rect x="90" y="151" width="40" height="2.5" rx="1.25" fill="#C9A24B" />
 
       {/* Anillo rojo decorativo, guiño a la identidad de ISEJ */}
-      <Rect x="54" y="80" width="112" height="4" fill="#D0271D" opacity={0.85} />
+      <Rect x="54" y="80" width="112" height="4" fill="#C9A24B" opacity={0.85} />
 
       {/* Tapa de madera (frente, tapa todo lo anterior) */}
       <Rect x="46" y="60" width="128" height="22" fill="url(#woodSide)" />

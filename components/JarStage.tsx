@@ -30,9 +30,9 @@ export function JarStage({ jarSize, coinCount, dropTrigger, pileIndex, onDropCom
       >
         <Defs>
           <RadialGradient id="halo" cx="50" cy="50" r="50" gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor="#F2B84B" stopOpacity={0.55} />
-            <Stop offset="0.55" stopColor="#F2B84B" stopOpacity={0.14} />
-            <Stop offset="1" stopColor="#F2B84B" stopOpacity={0} />
+            <Stop offset="0" stopColor="#E3C277" stopOpacity={0.5} />
+            <Stop offset="0.55" stopColor="#E3C277" stopOpacity={0.13} />
+            <Stop offset="1" stopColor="#E3C277" stopOpacity={0} />
           </RadialGradient>
         </Defs>
         <Circle cx="50" cy="50" r="50" fill="url(#halo)" />
