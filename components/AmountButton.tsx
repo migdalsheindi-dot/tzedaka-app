@@ -1,64 +1,101 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { colors, fonts, radius } from '../theme';
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { colors, fonts, radius, TOUCH_TARGET } from '../theme';
+import { glass } from './Glass';
 
 type Props = {
   label: string;
   onPress: () => void;
   variant?: 'amount' | 'custom';
   disabled?: boolean;
+  /** Ancho fijo de la columna (para que todas las tarjetas de monto midan igual). */
+  width?: number;
 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-/** Tarjeta de monto: blanca y limpia, se invierte a medianoche al pasar el mouse. */
-export function AmountButton({ label, onPress, variant = 'amount', disabled }: Props) {
+/**
+ * Tarjeta de monto de cristal. Al pasar el mouse / tocar: escala con rebote
+ * (spring), borde dorado y un brillo cálido detrás de la opción activa.
+ */
+export function AmountButton({ label, onPress, variant = 'amount', disabled, width }: Props) {
   const scale = useSharedValue(1);
-  const [hovered, setHovered] = useState(false);
+  const active = useSharedValue(0);
+  const isCustom = variant === 'custom';
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  const setActive = (on: boolean) => {
+    active.value = withTiming(on ? 1 : 0, { duration: 220 });
+  };
+
+  const cardStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+    borderColor: isCustom
+      ? 'transparent'
+      : interpolateColor(active.value, [0, 1], [colors.hairline, colors.gold]),
+    backgroundColor: isCustom
+      ? 'transparent'
+      : interpolateColor(active.value, [0, 1], ['rgba(255,255,255,0.045)', 'rgba(232,199,122,0.12)']),
   }));
 
-  const isCustom = variant === 'custom';
-  const active = hovered && !disabled;
+  const glowStyle = useAnimatedStyle(() => ({ opacity: active.value }));
+  const labelStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(active.value, [0, 1], [colors.text, colors.gold]),
+  }));
 
   return (
     <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={isCustom ? 'Donar otro monto' : `Donar ${label}`}
-      onHoverIn={() => setHovered(true)}
-      onHoverOut={() => setHovered(false)}
+      onHoverIn={() => {
+        scale.value = withSpring(1.025, { damping: 12, stiffness: 260 });
+        setActive(true);
+      }}
+      onHoverOut={() => {
+        scale.value = withSpring(1, { damping: 14, stiffness: 260 });
+        setActive(false);
+      }}
       onPressIn={() => {
-        scale.value = withSpring(0.96, { damping: 18, stiffness: 400 });
+        scale.value = withSpring(0.96, { damping: 18, stiffness: 420 });
+        setActive(true);
       }}
       onPressOut={() => {
-        scale.value = withSpring(1, { damping: 14, stiffness: 300 });
+        scale.value = withSpring(1, { damping: 10, stiffness: 300 });
+        setActive(false);
       }}
       onPress={onPress}
       disabled={disabled}
       style={[
         styles.button,
-        isCustom ? styles.custom : styles.amount,
-        active && styles.active,
+        isCustom ? styles.customButton : styles.amountButton,
+        !isCustom && width ? { width, flexGrow: 0, flexBasis: width } : null,
+        cardStyle,
         disabled && styles.disabled,
-        animatedStyle,
       ]}
     >
-      <View style={styles.row}>
-        <Text style={[styles.label, isCustom && styles.customLabel, active && styles.activeLabel]}>
-          {label}
-        </Text>
-        {isCustom ? (
-          <Ionicons
-            name="arrow-forward"
-            size={18}
-            color={active ? colors.onDark : colors.goldDeep}
-          />
-        ) : null}
-      </View>
+      <Animated.View pointerEvents="none" style={[styles.glow, glowStyle]} />
+      {isCustom ? (
+        <LinearGradient
+          colors={colors.goldGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.customFill}
+        >
+          <Text style={styles.customLabel}>{label}</Text>
+          <Ionicons name="arrow-forward" size={18} color={colors.goldInk} />
+        </LinearGradient>
+      ) : (
+        <View style={styles.row}>
+          <Animated.Text style={[styles.label, labelStyle]}>{label}</Animated.Text>
+        </View>
+      )}
     </AnimatedPressable>
   );
 }
@@ -66,49 +103,53 @@ export function AmountButton({ label, onPress, variant = 'amount', disabled }: P
 const styles = StyleSheet.create({
   button: {
     flexGrow: 1,
-    minHeight: 64,
-    paddingHorizontal: 16,
+    minHeight: TOUCH_TARGET + 8,
     borderRadius: radius.md,
-    alignItems: 'center',
+    alignItems: 'stretch',
     justifyContent: 'center',
-    borderWidth: 1,
     cursor: 'pointer',
   },
-  amount: {
+  amountButton: {
+    ...glass,
     flexBasis: '30%',
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    boxShadow: '0px 1px 2px rgba(15, 20, 36, 0.04), 0px 6px 16px rgba(15, 20, 36, 0.05)',
+    paddingHorizontal: 12,
+    // `glass` define el color de borde/relleno; Reanimated los anima encima.
   },
-  custom: {
+  customButton: {
     flexBasis: '100%',
-    backgroundColor: colors.goldSoft,
-    borderColor: 'transparent',
   },
-  active: {
-    backgroundColor: colors.midnight,
-    borderColor: colors.midnight,
-    boxShadow: '0px 14px 30px rgba(14, 20, 36, 0.28)',
-  },
-  disabled: {
-    opacity: 0.5,
+  glow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: radius.md,
+    boxShadow: '0px 0px 36px rgba(232, 199, 122, 0.42)',
   },
   row: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'center',
   },
   label: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    letterSpacing: -0.3,
-    color: colors.ink,
+    fontFamily: fonts.figureBold,
+    fontSize: 24,
+    letterSpacing: -0.5,
+  },
+  customFill: {
+    minHeight: TOUCH_TARGET + 8,
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
   },
   customLabel: {
+    fontFamily: fonts.display,
     fontSize: 16,
-    color: colors.goldDeep,
+    color: colors.goldInk,
   },
-  activeLabel: {
-    color: colors.onDark,
+  disabled: {
+    opacity: 0.45,
   },
 });

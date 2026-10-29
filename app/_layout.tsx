@@ -1,12 +1,11 @@
-import { Fraunces_600SemiBold, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
 import {
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
-  Inter_700Bold,
-  Inter_800ExtraBold,
   useFonts,
 } from '@expo-google-fonts/inter';
+import { PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans';
+import { SpaceGrotesk_500Medium, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
@@ -19,21 +18,21 @@ export default function RootLayout() {
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
-    Inter_700Bold,
-    Inter_800ExtraBold,
-    Fraunces_600SemiBold,
-    Fraunces_700Bold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_700Bold,
   });
 
   if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: colors.ivory }} />;
+    return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.ivory }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
       <SafeAreaProvider>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.ivory } }} />
+        <StatusBar style="light" />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

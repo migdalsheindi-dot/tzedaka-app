@@ -12,18 +12,58 @@ const MERCADOPAGO_QUICK_LINKS: Record<number, string> = {
 /** Link base de cobro de Mercado Pago, para "Otro monto". */
 export const MERCADOPAGO_BASE_URL = 'https://link.mercadopago.com.ar/isej770';
 
-/** Abre `Linking.openURL` directo, sin pasos intermedios. */
-async function openUrl(url: string): Promise<void> {
-  // En web, `Linking.openURL` abre una pestaña nueva vía `window.open`,
-  // que los navegadores mobile bloquean como popup si se llama con delay
-  // (recién al terminar la animación, no en el instante del click). Por
-  // eso en web se navega la misma pestaña en vez de abrir una nueva.
-  if (Platform.OS === 'web') {
-    if (typeof window !== 'undefined') {
-      window.location.href = url;
-    }
+/** Paquete de la app de Mercado Pago en Android (no confundir con Mercado Libre). */
+const MERCADOPAGO_ANDROID_PACKAGE = 'com.mercadopago.wallet';
+
+/**
+ * Intent de Android que le pide a Chrome abrir el link *directamente en la
+ * app de Mercado Pago*. Si la app no está instalada, Chrome usa
+ * `browser_fallback_url` y abre el mismo link en el navegador.
+ */
+function toAndroidIntent(url: string): string {
+  const { host, pathname, search } = new URL(url);
+  const fallback = encodeURIComponent(url);
+  return (
+    `intent://${host}${pathname}${search}#Intent;scheme=https;` +
+    `package=${MERCADOPAGO_ANDROID_PACKAGE};S.browser_fallback_url=${fallback};end`
+  );
+}
+
+/**
+ * Abre el link de Mercado Pago en la misma pestaña, sin iframes ni
+ * `target="_blank"` (abrir una pestaña nueva con delay lo bloquean los
+ * navegadores mobile).
+ *
+ * - Android: Intent que fuerza la app de Mercado Pago. Si Chrome lo bloquea
+ *   (no cambió nada a los 1,2 s), se navega al link https normal.
+ * - iOS/desktop: navegación directa al link corto; en iOS es el sistema el
+ *   que decide si abre la app (Universal Links) y no se puede forzar desde
+ *   una web.
+ */
+function openOnWeb(url: string) {
+  if (typeof window === 'undefined') return;
+
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (!isAndroid) {
+    window.location.href = url;
     return;
   }
+
+  window.location.href = toAndroidIntent(url);
+  setTimeout(() => {
+    // Si seguimos acá y visibles, el intent no se ejecutó: caemos al link normal.
+    if (document.visibilityState === 'visible') {
+      window.location.href = url;
+    }
+  }, 1200);
+}
+
+async function openUrl(url: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    openOnWeb(url);
+    return;
+  }
+  // En la app nativa el sistema resuelve solo: app de Mercado Pago si está instalada.
   await Linking.openURL(url);
 }
 

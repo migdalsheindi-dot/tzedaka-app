@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, {
@@ -12,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Coin } from './Coin';
 import { useCoinSound } from '../hooks/useCoinSound';
+import { impactFeedback } from '../utils/feedback';
 import {
   JAR_ENTRY_POINT,
   JAR_SLOT_POINT,
@@ -72,7 +72,7 @@ export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete }: P
 
     const handleImpact = (finished?: boolean) => {
       if (!finished) return;
-      runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
+      runOnJS(impactFeedback)();
       runOnJS(playCoinSound)();
     };
 

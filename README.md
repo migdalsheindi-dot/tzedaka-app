@@ -7,33 +7,38 @@ Demo web pública (para probar el diseño/flujo desde cualquier navegador — no
 
 ## Estructura del proyecto
 
-App de una sola pantalla, minimalista: la Tzedaká, los montos y una reseña breve de ISEJ.
+App de una sola pantalla: la Tzedaká, los montos y una reseña breve de ISEJ.
 
 ```
 tzedaka-app/
-  theme.ts                 Sistema de diseño: paleta (marfil / medianoche / dorado), tipografía
-                           (Fraunces + Inter), radios, sombras, breakpoints
+  theme.ts                 Sistema de diseño oscuro: paleta (#0A0B0E + dorado metálico + índigo),
+                           tipografía (Plus Jakarta Sans / Inter / Space Grotesk), radios, breakpoints
   app/
     _layout.tsx            Layout raíz (fuentes + providers)
     index.tsx              Pantalla única: lógica de donación
     +not-found.tsx         Cualquier ruta vieja vuelve al inicio
   components/
     DonationSection.tsx    Título + alcancía + montos (2 columnas en desktop, apilado en móvil)
+    AmountButton.tsx       Tarjeta de monto de cristal: rebote (spring), borde y brillo dorado al activarse
     JarStage.tsx           La alcancía con su halo y la moneda que cae
     TzedakaBox.tsx         Ilustración SVG de la alcancía (jarra transparente + tapa/base de madera)
-    CoinAnimation.tsx      Caída de la moneda hasta su pila + sonido/vibración al impacto
-    Coin.tsx               Ilustración SVG de la moneda
-    AmountButton.tsx       Tarjeta de monto (hover + micro-interacción de resorte)
+    Coin.tsx               Moneda dorada metálica (borde acanalado, relieve y destello)
+    CoinAnimation.tsx      Caída de la moneda + sonido y vibración exactamente en el impacto
+    Glass.tsx              Superficie de cristal (blur + borde 1px al 8%) y luz ambiental de fondo
     AboutIsej.tsx          Reseña breve de ISEJ + footer
     IsejHeader.tsx         Barra superior mínima (logo de ISEJ)
     layout.tsx             Container y hook de responsividad (useIsWide)
   hooks/
     useDonations.ts        Persistencia local de las monedas de la alcancía (AsyncStorage)
-    useCoinSound.ts        Reproducción del sonido de moneda (expo-audio)
+    useCoinSound.ts        Sonido en nativo (expo-audio)
+    useCoinSound.web.ts    Sonido en web con Web Audio API (AudioBuffer precargado, sin latencia)
   utils/
+    feedback.ts            Vibración en nativo (expo-haptics: golpe + rebote)
+    feedback.web.ts        Vibración en web: navigator.vibrate([15, 30, 10, 20, 25])
+    mercadopago.ts         Links de Mercado Pago por monto + apertura directa de la app
     currency.ts            Formateo de pesos argentinos (ARS)
-    mercadopago.ts         Links de Mercado Pago por monto
     jarGeometry.ts         Geometría compartida de la alcancía y la pila de monedas
+  scripts/post-export.mjs  Parchea el HTML exportado (safe-area, theme-color, 404.html, .nojekyll)
   assets/
     sounds/coin-drop.mp3   Sonido de moneda ("Gold coin prize", Mixkit, licencia libre)
     isej/logo.png          Logo de ISEJ (isej.com)
@@ -44,8 +49,11 @@ tzedaka-app/
 1. El usuario toca un monto rápido ($500 a $10.000) o "Otro monto".
 2. Se dispara de inmediato la animación de la moneda cayendo en la
    alcancía (~1.6s, `components/CoinAnimation.tsx`). El sonido y la
-   vibración (`expo-haptics`) se disparan juntos justo en el instante en
-   que la moneda impacta la pila, no al tocar el botón. Para los 5 montos
+   vibración se disparan juntos justo en el instante en que la moneda
+   impacta la pila, no al tocar el botón. En web el sonido usa Web Audio
+   API (AudioBuffer precargado, desbloqueado en el toque) y la vibración
+   `navigator.vibrate([15, 30, 10, 20, 25])` (iOS Safari no soporta
+   vibración web); en nativo, `expo-audio` y `expo-haptics`. Para los 5 montos
    fijos, la moneda queda guardada en la alcancía (AsyncStorage).
 3. Apenas termina la animación, redirige automáticamente a Mercado Pago
    (`utils/mercadopago.ts`), sin pantallas ni pasos intermedios:
@@ -57,17 +65,23 @@ tzedaka-app/
      ingresa el monto en el checkout. Como ese monto no se conoce dentro
      de la app, la moneda solo se anima (no queda guardada en la pila).
 
-   En web, la redirección navega la misma pestaña (`window.location.href`)
-   en vez de abrir una nueva — abrir una pestaña nueva con delay (recién al
-   terminar la animación) es bloqueado como popup en varios navegadores
-   mobile. En iOS/Android nativo llama `Linking.openURL` directo, que abre
-   la app de Mercado Pago si está instalada o el navegador si no.
+   Apertura del link (`utils/mercadopago.ts`), siempre en la misma
+   pestaña y sin iframes ni `target="_blank"` (abrir una pestaña nueva con
+   delay lo bloquean los navegadores mobile):
+   - **Android (web):** un Intent que fuerza la app de Mercado Pago
+     (`com.mercadopago.wallet`), con `browser_fallback_url` al mismo link
+     si no está instalada; si Chrome bloqueara el intent, a los 1,2 s se
+     navega al link https normal.
+   - **iOS / desktop (web):** navegación directa a `mpago.la/...`. En iOS
+     es el sistema (Universal Links) quien decide qué app abre el link y
+     una web no puede forzarlo; no se usa el esquema `mercadopago://`
+     porque no hay ruta documentada para links de pago y quedaría muerto
+     si la app no está instalada.
+   - **App nativa:** `Linking.openURL` directo.
 
-   **Nota:** si en algún celular estos links abren la app de Mercado Libre
-   en vez de Mercado Pago (o piden iniciar sesión primero), es un
-   comportamiento del lado de Mercado Pago/del dispositivo (asociación de
-   universal links entre ambas apps cuando están las dos instaladas), no
-   de la app — no hay forma de controlarlo desde acá.
+   **Nota:** si en algún celular estos links abren Mercado Libre en vez de
+   Mercado Pago (o piden iniciar sesión), es la asociación de Universal
+   Links entre ambas apps del lado del dispositivo.
 
 **Límite conocido (Fase 1, sin backend):** no hay forma de verificar que
 el pago en Mercado Pago se completó realmente — se cuenta como donación
@@ -78,19 +92,16 @@ Para eso hace falta una Fase 2 con backend + webhooks de Mercado Pago
 
 ## Cómo republicar la demo web (GitHub Pages)
 
-La demo pública es un build estático (`expo export -p web`) publicado en la
-rama `gh-pages` del repo, separada del código fuente en `main`. Para
-actualizarla después de un cambio:
+La demo pública es un build estático publicado en la rama `gh-pages`,
+separada del código fuente en `main`. Para actualizarla tras un cambio:
 
 ```bash
-npx expo export -p web
-touch dist/.nojekyll        # sin esto, GitHub ignora la carpeta _expo
-cp dist/index.html dist/404.html   # fallback para rutas al recargar (SPA)
-npx gh-pages -d dist -b gh-pages --dotfiles
+npm run deploy:web
 ```
 
-El flag `--dotfiles` es obligatorio: sin él, `gh-pages` excluye `.nojekyll`
-y el sitio queda roto (pantalla en blanco, bundle JS con 404).
+Eso exporta (`expo export -p web`), parchea el HTML (`scripts/post-export.mjs`)
+y publica `dist/` con `gh-pages --dotfiles` (el flag es obligatorio: sin
+`.nojekyll` GitHub ignora la carpeta `_expo` y el sitio queda en blanco).
 
 ## Cómo probar la app en iOS y Android en simultáneo
 

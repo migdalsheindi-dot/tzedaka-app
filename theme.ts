@@ -1,44 +1,44 @@
 /**
- * Sistema de diseño de Tzedaká ISEJ.
+ * Sistema de diseño de Tzedaká ISEJ — versión oscura y sofisticada.
  *
- * Estética sobria y distinguida: marfil como lienzo, azul medianoche como
- * contraste de alto impacto y dorado champagne como único acento cálido.
- * Títulos en serif (Fraunces) para dar seriedad; texto en Inter para
- * legibilidad. Contrastes AA sobre cada fondo.
+ * Lienzo casi negro (#0A0B0E) con acentos dorados metálicos y un toque de
+ * índigo profundo como luz ambiental. Superficies de "cristal": relleno
+ * translúcido + borde de 1px blanco al 8% + desenfoque de fondo.
+ * Títulos en Plus Jakarta Sans, texto en Inter y cifras en Space Grotesk.
  */
 export const colors = {
-  midnight: '#0E1424',
-  midnight2: '#1C2650',
+  bg: '#0A0B0E',
+  indigo: '#2B2F8F',
 
-  ivory: '#FAF8F3',
-  card: '#FFFFFF',
-  border: '#E7E2D6',
+  surface: 'rgba(255,255,255,0.045)',
+  surfaceStrong: 'rgba(255,255,255,0.08)',
+  hairline: 'rgba(255,255,255,0.08)',
+  hairlineStrong: 'rgba(255,255,255,0.16)',
 
-  ink: '#0F1424',
-  body: '#4A5163',
-  muted: '#7B8194',
+  text: '#F4F1EA',
+  textMuted: 'rgba(244,241,234,0.64)',
+  textFaint: 'rgba(244,241,234,0.42)',
 
-  gold: '#C9A24B',
-  goldDeep: '#9A7424',
-  goldSoft: '#F6EEDC',
-
-  onDark: '#FFFFFF',
-  onDarkMuted: 'rgba(255,255,255,0.7)',
+  gold: '#E8C77A',
+  goldDeep: '#B8893A',
+  goldInk: '#1A1304',
+  goldGradient: ['#F3DC9E', '#D9AE52', '#A87A2A'] as const,
 } as const;
 
 export const fonts = {
-  regular: 'Inter_400Regular',
-  medium: 'Inter_500Medium',
-  semibold: 'Inter_600SemiBold',
-  bold: 'Inter_700Bold',
-  serif: 'Fraunces_600SemiBold',
-  serifBold: 'Fraunces_700Bold',
+  body: 'Inter_400Regular',
+  bodyMedium: 'Inter_500Medium',
+  bodySemibold: 'Inter_600SemiBold',
+  display: 'PlusJakartaSans_700Bold',
+  displayHeavy: 'PlusJakartaSans_800ExtraBold',
+  figure: 'SpaceGrotesk_500Medium',
+  figureBold: 'SpaceGrotesk_700Bold',
 } as const;
 
 export const radius = {
   md: 16,
   lg: 24,
-  xl: 36,
+  xl: 32,
   pill: 999,
 } as const;
 
@@ -51,10 +51,8 @@ export const spacing = {
   xxl: 72,
 } as const;
 
-export const shadows = {
-  card: '0px 1px 2px rgba(15, 20, 36, 0.04), 0px 10px 30px rgba(15, 20, 36, 0.06)',
-  raised: '0px 4px 8px rgba(15, 20, 36, 0.06), 0px 30px 60px rgba(15, 20, 36, 0.22)',
-} as const;
+/** Alto táctil mínimo cómodo para botones. */
+export const TOUCH_TARGET = 56;
 
 /** Ancho máximo del contenido en desktop. */
 export const MAX_CONTENT_WIDTH = 1080;

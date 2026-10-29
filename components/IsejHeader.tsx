@@ -1,5 +1,6 @@
 import { Image, Linking, Pressable, PressableStateCallbackType, StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, spacing } from '../theme';
+import { colors, fonts, radius, spacing } from '../theme';
+import { glass } from './Glass';
 import { Container } from './layout';
 
 const isejLogo = require('../assets/isej/logo.png');
@@ -41,27 +42,31 @@ const styles = StyleSheet.create({
   logo: {
     width: 40,
     height: 40,
-    borderRadius: 10,
-    backgroundColor: colors.card,
+    borderRadius: 11,
+    backgroundColor: '#FFFFFF',
   },
   wordmark: {
-    fontFamily: fonts.serifBold,
-    fontSize: 24,
-    color: colors.ink,
-    letterSpacing: -0.4,
+    fontFamily: fonts.displayHeavy,
+    fontSize: 22,
+    color: colors.text,
+    letterSpacing: -0.5,
   },
   link: {
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: 'transparent',
+    ...glass,
+    minHeight: 40,
+    paddingHorizontal: 16,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
     cursor: 'pointer',
   },
   linkHover: {
-    borderBottomColor: colors.gold,
+    borderColor: colors.hairlineStrong,
+    backgroundColor: colors.surfaceStrong,
   },
   linkText: {
-    fontFamily: fonts.semibold,
-    fontSize: 14,
-    color: colors.body,
+    fontFamily: fonts.bodySemibold,
+    fontSize: 13,
+    color: colors.textMuted,
   },
 });

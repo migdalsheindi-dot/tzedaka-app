@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { colors, fonts, radius, shadows, spacing } from '../theme';
+import { colors, fonts, radius, spacing } from '../theme';
 import { formatARS } from '../utils/currency';
 import { AmountButton } from './AmountButton';
+import { glass } from './Glass';
 import { JarStage } from './JarStage';
 import { Container, useIsWide } from './layout';
 
@@ -32,15 +33,19 @@ export function DonationSection({
 }: Props) {
   const { width, isWide } = useIsWide();
   const jarSize = isWide ? 270 : Math.min(width * 0.5, 210);
+  const [gridWidth, setGridWidth] = useState(0);
+  const GAP = 12;
+  const columnWidth = gridWidth > 0 ? Math.floor((gridWidth - GAP * 2) / 3) : undefined;
 
   const copy = (
     <Animated.View entering={FadeInDown.duration(600)} style={styles.copy}>
-      <View style={styles.eyebrowRow}>
-        <View style={styles.eyebrowLine} />
-        <Text style={styles.eyebrow}>Tzedaká · ISEJ</Text>
+      <View style={styles.badge}>
+        <View style={styles.badgeDot} />
+        <Text style={styles.badgeText}>Tzedaká · ISEJ</Text>
       </View>
       <Text style={[styles.title, isWide && styles.titleWide]}>
-        Sumá tu impacto{'\n'}en la comunidad
+        Sumá tu <Text style={styles.titleGold}>impacto</Text>
+        {'\n'}en la comunidad
       </Text>
       <Text style={styles.subtitle}>
         Una forma simple de aportar, en cualquier momento. Elegí un monto y completalo en
@@ -51,12 +56,7 @@ export function DonationSection({
 
   const stage = (
     <Animated.View entering={FadeIn.duration(800).delay(150)} style={isWide ? styles.stageWide : undefined}>
-      <LinearGradient
-        colors={[colors.midnight2, colors.midnight]}
-        start={{ x: 0.2, y: 0 }}
-        end={{ x: 0.8, y: 1 }}
-        style={[styles.stage, isWide && styles.stageWideInner]}
-      >
+      <View style={[styles.stage, isWide && styles.stageWideInner]}>
         <JarStage
           jarSize={jarSize}
           coinCount={coinCount}
@@ -64,26 +64,27 @@ export function DonationSection({
           pileIndex={pileIndex}
           onDropComplete={onDropComplete}
         />
-      </LinearGradient>
+      </View>
     </Animated.View>
   );
 
   const picker = (
     <Animated.View entering={FadeInDown.duration(600).delay(250)} style={styles.picker}>
       <Text style={styles.pickerLabel}>Elegí un monto</Text>
-      <View style={styles.grid}>
+      <View style={styles.grid} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
         {amounts.map((amount) => (
           <AmountButton
             key={amount}
             label={formatARS(amount)}
             onPress={() => onSelectAmount(amount)}
             disabled={disabled}
+            width={columnWidth}
           />
         ))}
         <AmountButton label="Otro monto" variant="custom" onPress={onSelectCustom} disabled={disabled} />
       </View>
       <View style={styles.secure}>
-        <Ionicons name="lock-closed" size={13} color={colors.muted} />
+        <Ionicons name="lock-closed" size={13} color={colors.textFaint} />
         <Text style={styles.secureText}>Pago seguro con Mercado Pago</Text>
       </View>
     </Animated.View>
@@ -125,51 +126,61 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   copy: {
-    gap: 14,
+    gap: 16,
   },
-  eyebrowRow: {
+  badge: {
+    ...glass,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    alignSelf: 'flex-start',
+    gap: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: radius.pill,
   },
-  eyebrowLine: {
-    width: 28,
-    height: 2,
+  badgeDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
     backgroundColor: colors.gold,
+    boxShadow: '0px 0px 10px rgba(232, 199, 122, 0.9)',
   },
-  eyebrow: {
-    fontFamily: fonts.semibold,
+  badgeText: {
+    fontFamily: fonts.bodySemibold,
     fontSize: 12,
-    letterSpacing: 1.8,
+    letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: colors.goldDeep,
+    color: colors.textMuted,
   },
   title: {
-    fontFamily: fonts.serifBold,
+    fontFamily: fonts.displayHeavy,
     fontSize: 38,
     lineHeight: 42,
-    letterSpacing: -1,
-    color: colors.ink,
+    letterSpacing: -1.4,
+    color: colors.text,
   },
   titleWide: {
-    fontSize: 58,
-    lineHeight: 62,
-    letterSpacing: -1.8,
+    fontSize: 60,
+    lineHeight: 64,
+    letterSpacing: -2.4,
+  },
+  titleGold: {
+    color: colors.gold,
   },
   subtitle: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.body,
     fontSize: 17,
     lineHeight: 26,
-    color: colors.body,
+    color: colors.textMuted,
     maxWidth: 460,
   },
   stage: {
+    ...glass,
     borderRadius: radius.xl,
     paddingVertical: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    boxShadow: shadows.raised,
   },
   stageWide: {
     flex: 1,
@@ -181,11 +192,11 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   pickerLabel: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.bodySemibold,
     fontSize: 12,
     letterSpacing: 1.6,
     textTransform: 'uppercase',
-    color: colors.muted,
+    color: colors.textFaint,
   },
   grid: {
     flexDirection: 'row',
@@ -198,8 +209,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   secureText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    color: colors.muted,
+    color: colors.textFaint,
   },
 });

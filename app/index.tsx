@@ -1,10 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AboutIsej, Footer } from '../components/AboutIsej';
 import { DonationSection } from '../components/DonationSection';
+import { BackgroundGlow } from '../components/Glass';
 import { IsejHeader } from '../components/IsejHeader';
+import { primeCoinSound } from '../hooks/useCoinSound';
 import { useDonations } from '../hooks/useDonations';
 import { colors } from '../theme';
 import { openMercadoPagoCustomAmount, openMercadoPagoDonation } from '../utils/mercadopago';
@@ -13,6 +15,7 @@ const QUICK_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 
 export default function DonateScreen() {
   const { donations, addDonation } = useDonations();
+  const insets = useSafeAreaInsets();
 
   const [dropTrigger, setDropTrigger] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -33,6 +36,7 @@ export default function DonateScreen() {
     async (amount: number) => {
       if (isProcessing) return;
       setIsProcessing(true);
+      primeCoinSound(); // desbloquea el audio dentro del gesto del usuario
 
       pendingRedirectRef.current = () => openMercadoPagoDonation(amount);
       playDropAnimation();
@@ -46,6 +50,7 @@ export default function DonateScreen() {
   const startCustomDonation = useCallback(() => {
     if (isProcessing) return;
     setIsProcessing(true);
+    primeCoinSound(); // desbloquea el audio dentro del gesto del usuario
 
     pendingRedirectRef.current = () => openMercadoPagoCustomAmount();
     playDropAnimation();
@@ -61,32 +66,38 @@ export default function DonateScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <IsejHeader />
-        <DonationSection
-          amounts={QUICK_AMOUNTS}
-          coinCount={donations.length}
-          dropTrigger={dropTrigger}
-          pileIndex={nextCoinIndexRef.current}
-          disabled={isProcessing}
-          onSelectAmount={startDonation}
-          onSelectCustom={startCustomDonation}
-          onDropComplete={handleDropComplete}
-        />
-        <AboutIsej />
-        <Footer />
-      </ScrollView>
-    </SafeAreaView>
+    <View style={styles.root}>
+      <BackgroundGlow />
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 12) + 24 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <IsejHeader />
+          <DonationSection
+            amounts={QUICK_AMOUNTS}
+            coinCount={donations.length}
+            dropTrigger={dropTrigger}
+            pileIndex={nextCoinIndexRef.current}
+            disabled={isProcessing}
+            onSelectAmount={startDonation}
+            onSelectCustom={startCustomDonation}
+            onDropComplete={handleDropComplete}
+          />
+          <AboutIsej />
+          <Footer />
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: colors.ivory,
-  },
-  content: {
-    paddingBottom: 24,
   },
 });

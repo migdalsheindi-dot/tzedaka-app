@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Linking, Pressable, PressableStateCallbackType, StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, radius, shadows, spacing } from '../theme';
+import { colors, fonts, radius, spacing } from '../theme';
+import { glass } from './Glass';
 import { Container, useIsWide } from './layout';
 
 /** Reseña breve de ISEJ. */
@@ -26,7 +27,7 @@ export function AboutIsej() {
             ]}
           >
             <Text style={styles.linkText}>Conocer más</Text>
-            <Ionicons name="arrow-forward" size={15} color={colors.goldDeep} />
+            <Ionicons name="arrow-forward" size={15} color={colors.gold} />
           </Pressable>
         </View>
       </View>
@@ -47,13 +48,10 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   card: {
-    backgroundColor: colors.card,
+    ...glass,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
     gap: 14,
-    boxShadow: shadows.card,
   },
   cardWide: {
     flexDirection: 'row',
@@ -63,11 +61,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 44,
   },
   eyebrow: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.bodySemibold,
     fontSize: 12,
-    letterSpacing: 1.8,
+    letterSpacing: 1.6,
     textTransform: 'uppercase',
-    color: colors.goldDeep,
+    color: colors.gold,
     minWidth: 110,
     paddingTop: 4,
   },
@@ -75,36 +73,34 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   text: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.body,
     fontSize: 17,
     lineHeight: 28,
-    color: colors.body,
+    color: colors.textMuted,
   },
   link: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 8,
-    paddingBottom: 3,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    minHeight: 44,
     cursor: 'pointer',
   },
   linkHover: {
-    borderBottomColor: colors.gold,
+    opacity: 0.8,
   },
   linkText: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.bodySemibold,
     fontSize: 14,
-    color: colors.goldDeep,
+    color: colors.gold,
   },
   footer: {
     paddingVertical: spacing.xl,
     alignItems: 'center',
   },
   footerText: {
-    fontFamily: fonts.serif,
-    fontSize: 14,
-    color: colors.muted,
+    fontFamily: fonts.display,
+    fontSize: 13,
+    color: colors.textFaint,
   },
 });
