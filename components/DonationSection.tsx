@@ -25,7 +25,7 @@ type Props = {
 // ajuste al alto de la pantalla y todos los montos queden a la vista.
 const HEADER_H = 80;
 const TITLE_BLOCK_H = 100;
-const PICKER_H = 232;
+const PICKER_H = 176;
 const GAPS_H = 40;
 /** Alto de la alcancía por unidad de `jarSize` (frasco + halo + sombra). */
 const JAR_STAGE_RATIO = 1.55;
@@ -113,7 +113,7 @@ export function DonationSection({
             />
           </Reveal>
         ))}
-        <Reveal delay={280 + amounts.length * 60} distance={32} style={styles.cellFull}>
+        <Reveal delay={280 + amounts.length * 60} distance={32} style={styles.cell}>
           <AmountButton label="Otro monto" variant="custom" onPress={onSelectCustom} disabled={disabled} />
         </Reveal>
       </View>
@@ -233,9 +233,6 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     flexBasis: '31%',
     minWidth: 90,
-  },
-  cellFull: {
-    flexBasis: '100%',
   },
   secure: {
     flexDirection: 'row',

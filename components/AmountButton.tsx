@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -162,7 +161,6 @@ export function AmountButton({ label, onPress, variant = 'amount', disabled }: P
               />
             </Animated.View>
             <Text style={styles.customLabel}>{label}</Text>
-            <Ionicons name="arrow-forward" size={16} color={colors.goldInk} />
           </LinearGradient>
         </View>
       ) : (
@@ -220,7 +218,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    paddingHorizontal: 6,
     overflow: 'hidden',
   },
   sweep: {
@@ -231,7 +229,7 @@ const styles = StyleSheet.create({
   },
   customLabel: {
     fontFamily: fonts.display,
-    fontSize: 15,
+    fontSize: 14,
     letterSpacing: -0.3,
     color: colors.goldInk,
   },
