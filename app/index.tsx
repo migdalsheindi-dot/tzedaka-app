@@ -4,12 +4,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { AboutIsej, Footer } from '../components/AboutIsej';
 import { Atmosphere } from '../components/Atmosphere';
+import { FAST_IMPACT_MS } from '../components/CoinAnimation';
 import { DonationSection } from '../components/DonationSection';
 import { IsejHeader } from '../components/IsejHeader';
-import { useCoinSound } from '../hooks/useCoinSound';
 import { useDonations } from '../hooks/useDonations';
 import { colors } from '../theme';
-import { impactFeedback } from '../utils/feedback';
 import {
   openMercadoPagoCustomAmount,
   openMercadoPagoDonation,
@@ -18,18 +17,20 @@ import {
 
 const QUICK_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 
+/** Pausa tras el impacto para que se oiga el "clink" antes de abrir Mercado Pago. */
+const MOBILE_REDIRECT_AFTER_IMPACT_MS = 240;
+
 export default function DonateScreen() {
   const { donations, addDonation } = useDonations();
   const insets = useSafeAreaInsets();
-  const { playCoinSound } = useCoinSound();
 
   const [dropTrigger, setDropTrigger] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const nextCoinIndexRef = useRef(0);
   const pendingRedirectRef = useRef<(() => Promise<void>) | null>(null);
-  // En celulares el sonido/vibración salen en el toque (no en el impacto).
-  const effectsAtImpactRef = useRef(true);
+  // En celulares la caída es rápida para redirigir pegado al toque.
+  const fastRef = useRef(false);
 
   // El sonido y la vibración se disparan dentro de CoinAnimation, justo en
   // el instante del impacto visual — acá solo se dispara la caída.
@@ -39,11 +40,11 @@ export default function DonateScreen() {
   }, [donations.length]);
 
   /**
-   * Arranca la donación. En escritorio: animación y, tras el impacto, redirige
-   * a Mercado Pago. En celulares y tablets el link se abre AHORA, dentro del
-   * gesto del toque (así el sistema lo entrega a la app de Mercado Pago, sin
-   * pasar por la web/Mercado Libre); el sonido, la vibración y la moneda
-   * arrancan en ese mismo instante.
+   * Arranca la donación: se ve caer la moneda, suena y vibra en el impacto y
+   * recién después se abre Mercado Pago. En celulares y tablets (web) la
+   * caída es rápida y la redirección se programa AHORA, dentro del gesto del
+   * toque, para que salga a menos de ~1 s: así iOS/Android siguen entregando
+   * el link a la app de Mercado Pago en vez de caer en la web.
    */
   const startFlow = useCallback(
     (openLink: () => Promise<void>, save?: () => Promise<unknown>) => {
@@ -51,20 +52,19 @@ export default function DonateScreen() {
       setIsProcessing(true);
 
       const atTap = opensAtTap();
-      effectsAtImpactRef.current = !atTap;
+      fastRef.current = atTap;
+      // En escritorio/nativo redirige al terminar la animación (CoinAnimation).
       pendingRedirectRef.current = atTap ? null : openLink;
 
       const saved = save?.(); // guarda la moneda antes de salir de la página
       playDropAnimation();
 
       if (atTap) {
-        impactFeedback();
-        playCoinSound();
-        openLink();
+        setTimeout(() => openLink(), FAST_IMPACT_MS + MOBILE_REDIRECT_AFTER_IMPACT_MS);
       }
       return saved;
     },
-    [isProcessing, playDropAnimation, playCoinSound]
+    [isProcessing, playDropAnimation]
   );
 
   const startDonation = useCallback(
@@ -109,7 +109,7 @@ export default function DonateScreen() {
             onSelectAmount={startDonation}
             onSelectCustom={startCustomDonation}
             onDropComplete={handleDropComplete}
-            withEffects={effectsAtImpactRef.current}
+            fast={fastRef.current}
           />
           <AboutIsej />
           <Footer />

@@ -51,18 +51,23 @@ tzedaka-app/
 ## Flujo de donación
 
 1. El usuario toca un monto rápido ($500 a $10.000) o "Otro monto".
-2. Se dispara la animación de la moneda cayendo en la alcancía
-   (`components/CoinAnimation.tsx`) con sonido (Web Audio API) y vibración.
-   Para los 5 montos fijos, la moneda queda guardada en la alcancía
-   (AsyncStorage). El orden depende del dispositivo:
-   - **Celular / tablet (web):** el link de Mercado Pago se abre **en el mismo
-     toque** (`opensAtTap()` en `utils/mercadopago.ts`), junto con el sonido y
-     la vibración. iOS (Universal Links) y Android (intents) solo entregan el
-     link a la app de Mercado Pago si la navegación nace de un gesto del
-     usuario; un salto de página con temporizador cae en la web (y a veces
-     pasa por Mercado Libre).
-   - **Escritorio y app nativa:** animación primero; sonido y vibración en el
-     instante del impacto y la redirección ~0,15 s después (≈1,4 s).
+2. Se ve caer la moneda en la alcancía (`components/CoinAnimation.tsx`) y en el
+   impacto suenan (Web Audio API) y vibran a la vez. Para los 5 montos fijos
+   la moneda queda guardada en la alcancía (AsyncStorage). Recién después
+   se abre Mercado Pago:
+   - **Escritorio y app nativa:** caída pausada (~1,2 s); redirección ~0,15 s
+     después del impacto.
+   - **Celular / tablet (web):** caída rápida (impacto a los 0,7 s) y la
+     redirección se programa **dentro del gesto del toque** para salir a
+     ~0,94 s (`opensAtTap()` en `utils/mercadopago.ts`). iOS (Universal Links)
+     y Android (intents) solo entregan el link a la app de Mercado Pago si la
+     navegación sale cerca de un toque (iOS: ≤ ~1 s); más tarde cae en la web
+     y a veces pasa por Mercado Libre.
+   - **Suena con el celular en silencio:** en iOS el interruptor de silencio
+     mutea el Web Audio, así que en el toque se activa la sesión de audio de
+     reproducción (`navigator.audioSession.type = 'playback'` + un `<audio>`
+     inaudible; ver `hooks/useCoinSound.web.ts`). En la app nativa,
+     `setAudioModeAsync({ playsInSilentMode: true })`.
 3. La redirección va siempre a Mercado Pago
    (`utils/mercadopago.ts`), sin pantallas ni pasos intermedios:
    - **Monto fijo** ($500 / $1.000 / $2.000 / $5.000 / $10.000): va directo

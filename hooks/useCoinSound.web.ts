@@ -13,6 +13,36 @@ let buffer: AudioBuffer | null = null;
 let rawData: Promise<ArrayBuffer | null> | null = null;
 let decoding: Promise<void> | null = null;
 
+// WAV de 0,1 s de silencio. Reproducirlo en un <audio> pasa la página a la
+// sesión de audio de "reproducción" en iOS, que ignora el interruptor de
+// silencio (el Web Audio por sí solo queda mudo con el celular en silencio).
+const SILENT_WAV = 'data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+let silentElement: HTMLAudioElement | null = null;
+let silentStopTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Hace que el sonido suene aunque el celular esté en modo silencio. */
+function playThroughSilentSwitch() {
+  try {
+    const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
+    if (session) session.type = 'playback'; // Safari 16.4+
+  } catch {
+    // Sin soporte: se usa solo el truco del <audio>.
+  }
+  try {
+    if (!silentElement) {
+      silentElement = new Audio(SILENT_WAV);
+      silentElement.loop = true;
+      silentElement.setAttribute('playsinline', '');
+    }
+    silentElement.play().catch(() => {});
+    // Lo apagamos a los 4 s para no dejar un "reproduciendo" en la pantalla de bloqueo.
+    clearTimeout(silentStopTimer);
+    silentStopTimer = setTimeout(() => silentElement?.pause(), 4000);
+  } catch {
+    // El sonido es un detalle decorativo: nunca debe romper la donación.
+  }
+}
+
 function getContext(): AudioContext | null {
   if (context) return context;
   const Ctor =
@@ -68,6 +98,7 @@ function ensureDecoded(ctx: AudioContext) {
  * reanudar el AudioContext así.
  */
 export function primeCoinSound() {
+  playThroughSilentSwitch();
   const ctx = getContext();
   if (!ctx) return;
   if (ctx.state === 'suspended') ctx.resume().catch(() => {});

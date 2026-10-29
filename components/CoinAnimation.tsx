@@ -25,23 +25,43 @@ type Props = {
   onDropComplete?: () => void;
   /** Si es false, no suena ni vibra en el impacto (ya se hizo en el toque). */
   withEffects?: boolean;
+  /** Caída rápida (celulares), para redirigir a Mercado Pago pegado al toque. */
+  fast?: boolean;
 };
 
 const COIN_SIZE = 34;
 const HALF = COIN_SIZE / 2;
 
-// Línea de tiempo (ms). El impacto —sonido y vibración— ocurre en IMPACT_AT.
-const FLIGHT_MS = 720; // cruza la pantalla hasta la ranura
-const DROP_MS = 520; // cae dentro hasta la pila
-const IMPACT_AT = FLIGHT_MS + DROP_MS;
-const BOUNCE_UP_MS = 140;
-const BOUNCE_SETTLE_MS = 140;
-const SQUASH_MS = 90;
-const FADE_DELAY_MS = IMPACT_AT + BOUNCE_UP_MS;
-const FADE_MS = 320;
-// La redirección a Mercado Pago sale apenas después del impacto: así queda lo
-// más cerca posible del toque (los navegadores de celular solo abren la app
-// de Mercado Pago si la navegación está cerca del gesto del usuario).
+// Línea de tiempo (ms). El impacto —sonido y vibración— ocurre en `impactAt`.
+type Timeline = {
+  flight: number; // cruza la pantalla hasta la ranura
+  drop: number; // cae dentro hasta la pila
+  impactAt: number;
+  bounceUp: number;
+  bounceSettle: number;
+  squash: number;
+  fadeDelay: number;
+  fade: number;
+  ring: number;
+};
+
+function timeline(flight: number, drop: number, bounce: number, squash: number, fade: number, ring: number): Timeline {
+  const impactAt = flight + drop;
+  return { flight, drop, impactAt, bounceUp: bounce, bounceSettle: bounce, squash, fadeDelay: impactAt + bounce, fade, ring };
+}
+
+/** Escritorio y app nativa: caída pausada y vistosa. */
+const NORMAL_TIMELINE = timeline(720, 520, 140, 90, 320, 560);
+/**
+ * Celulares (web): caída rápida pero completa. La redirección a Mercado Pago
+ * tiene que salir a menos de ~1 s del toque para que iOS/Android entreguen el
+ * link a la app, así que todo (vuelo, impacto, sonido) ocurre en ~0,7 s.
+ */
+const FAST_TIMELINE = timeline(360, 340, 90, 70, 200, 400);
+/** Instante del impacto en el modo rápido (ms desde el toque). */
+export const FAST_IMPACT_MS = FAST_TIMELINE.impactAt;
+
+// Aviso (a `onDropComplete`) apenas después del impacto.
 const REDIRECT_AFTER_IMPACT_MS = 150;
 
 const TRAIL_PARTICLES = 14;
@@ -97,8 +117,9 @@ function Spark({ index, flight, drop, geometry }: SparkProps) {
   );
 }
 
-export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete, withEffects = true }: Props) {
+export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete, withEffects = true, fast = false }: Props) {
   const scale = jarSize / JAR_VIEWBOX_WIDTH;
+  const tl = fast ? FAST_TIMELINE : NORMAL_TIMELINE;
   const { playCoinSound } = useCoinSound();
 
   const slotX = JAR_SLOT_POINT.x * scale;
@@ -145,30 +166,30 @@ export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete, wit
       runOnJS(playCoinSound)();
     };
 
-    flight.value = withTiming(1, { duration: FLIGHT_MS, easing: Easing.linear });
+    flight.value = withTiming(1, { duration: tl.flight, easing: Easing.linear });
     drop.value = withDelay(
-      FLIGHT_MS,
-      withTiming(1, { duration: DROP_MS, easing: Easing.linear }, handleImpact)
+      tl.flight,
+      withTiming(1, { duration: tl.drop, easing: Easing.linear }, handleImpact)
     );
-    rotate.value = withTiming(360 * 3, { duration: IMPACT_AT, easing: Easing.linear });
+    rotate.value = withTiming(360 * 3, { duration: tl.impactAt, easing: Easing.linear });
 
     // Destello al cruzar la ranura y onda dorada al golpear la pila.
     flash.value = withDelay(
-      FLIGHT_MS - 80,
+      tl.flight - 80,
       withSequence(withTiming(1, { duration: 160 }), withTiming(0, { duration: 420 }))
     );
-    ring.value = withDelay(IMPACT_AT, withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }));
+    ring.value = withDelay(tl.impactAt, withTiming(1, { duration: tl.ring, easing: Easing.out(Easing.cubic) }));
 
     bounce.value = withDelay(
-      IMPACT_AT,
-      withSequence(withTiming(-4, { duration: BOUNCE_UP_MS }), withTiming(0, { duration: BOUNCE_SETTLE_MS }))
+      tl.impactAt,
+      withSequence(withTiming(-4, { duration: tl.bounceUp }), withTiming(0, { duration: tl.bounceSettle }))
     );
-    squash.value = withDelay(IMPACT_AT, withTiming(0.85, { duration: SQUASH_MS }));
+    squash.value = withDelay(tl.impactAt, withTiming(0.85, { duration: tl.squash }));
 
-    opacity.value = withDelay(FADE_DELAY_MS, withTiming(0, { duration: FADE_MS }));
+    opacity.value = withDelay(tl.fadeDelay, withTiming(0, { duration: tl.fade }));
 
     redirectSignal.value = withDelay(
-      IMPACT_AT + REDIRECT_AFTER_IMPACT_MS,
+      tl.impactAt + REDIRECT_AFTER_IMPACT_MS,
       withTiming(1, { duration: 1 }, (finished) => {
         if (finished && onDropComplete) {
           runOnJS(onDropComplete)();
