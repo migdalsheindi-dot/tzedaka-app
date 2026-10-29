@@ -57,12 +57,13 @@ tzedaka-app/
    se abre Mercado Pago:
    - **Escritorio y app nativa:** caída pausada (~1,2 s); redirección ~0,15 s
      después del impacto.
-   - **Celular / tablet (web):** caída rápida (impacto a los 0,7 s) y la
-     redirección se programa **dentro del gesto del toque** para salir a
-     ~0,94 s (`opensAtTap()` en `utils/mercadopago.ts`). iOS (Universal Links)
-     y Android (intents) solo entregan el link a la app de Mercado Pago si la
-     navegación sale cerca de un toque (iOS: ≤ ~1 s); más tarde cae en la web
-     y a veces pasa por Mercado Libre.
+   - **Celular / tablet (web):** la redirección se programa **dentro del gesto
+     del toque** (`getTapProfile()` en `utils/mercadopago.ts`) y la duración de
+     la caída depende del sistema, porque iOS (Universal Links) solo entrega el
+     link a la app si la navegación sale a ≤ ~1 s del toque, y Chrome en
+     Android tolera hasta ~5 s (con intent a la app de Mercado Pago):
+     - **iPhone/iPad:** impacto a 0,85 s, redirección a ~0,95 s.
+     - **Android:** impacto a 1,1 s, redirección a ~1,35 s.
    - **Suena con el celular en silencio:** en iOS el interruptor de silencio
      mutea el Web Audio, así que en el toque se activa la sesión de audio de
      reproducción (`navigator.audioSession.type = 'playback'` + un `<audio>`

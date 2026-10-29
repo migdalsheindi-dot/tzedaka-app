@@ -66,10 +66,23 @@ function openOnWeb(url: string) {
  * pasa por Mercado Libre).
  */
 export function opensAtTap(): boolean {
-  if (Platform.OS !== 'web' || typeof navigator === 'undefined') return false;
+  return getTapProfile() !== null;
+}
+
+export type TapProfile = 'ios' | 'android';
+
+/**
+ * Qué tipo de celular es, para elegir cuánto puede durar la caída de la
+ * moneda antes de abrir Mercado Pago: iOS exige que la navegación salga a
+ * menos de ~1 s del toque; Chrome en Android tolera hasta ~5 s.
+ */
+export function getTapProfile(): TapProfile | null {
+  if (Platform.OS !== 'web' || typeof navigator === 'undefined') return null;
   const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) return 'android';
   const isIpadOs = /Macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
-  return /Android|iPhone|iPad|iPod/i.test(ua) || isIpadOs;
+  if (/iPhone|iPad|iPod/i.test(ua) || isIpadOs) return 'ios';
+  return null;
 }
 
 async function openUrl(url: string): Promise<void> {

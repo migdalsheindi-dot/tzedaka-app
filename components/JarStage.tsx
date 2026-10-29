@@ -20,14 +20,14 @@ type Props = {
   pileIndex: number;
   onDropComplete: () => void;
   withEffects?: boolean;
-  fast?: boolean;
+  tapProfile?: 'ios' | 'android' | null;
 };
 
 const ASPECT = JAR_VIEWBOX_HEIGHT / JAR_VIEWBOX_WIDTH;
 const FLOAT_MS = 3800;
 
 /** La Tzedaká flotando suavemente, con su halo dorado y la moneda que cae encima. */
-export function JarStage({ jarSize, coinCount, dropTrigger, pileIndex, onDropComplete, withEffects, fast }: Props) {
+export function JarStage({ jarSize, coinCount, dropTrigger, pileIndex, onDropComplete, withEffects, tapProfile }: Props) {
   const reduce = useReducedMotion();
   const jarHeight = jarSize * ASPECT;
   const glowSize = jarSize * 1.6;
@@ -78,7 +78,7 @@ export function JarStage({ jarSize, coinCount, dropTrigger, pileIndex, onDropCom
           pileIndex={pileIndex}
           onDropComplete={onDropComplete}
           withEffects={withEffects}
-          fast={fast}
+          tapProfile={tapProfile}
         />
       </Animated.View>
 

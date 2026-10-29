@@ -4,7 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { AboutIsej, Footer } from '../components/AboutIsej';
 import { Atmosphere } from '../components/Atmosphere';
-import { FAST_IMPACT_MS } from '../components/CoinAnimation';
+import { TAP_IMPACT_MS } from '../components/CoinAnimation';
 import { DonationSection } from '../components/DonationSection';
 import { IsejHeader } from '../components/IsejHeader';
 import { useDonations } from '../hooks/useDonations';
@@ -12,13 +12,14 @@ import { colors } from '../theme';
 import {
   openMercadoPagoCustomAmount,
   openMercadoPagoDonation,
-  opensAtTap,
+  getTapProfile,
+  type TapProfile,
 } from '../utils/mercadopago';
 
 const QUICK_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 
 /** Pausa tras el impacto para que se oiga el "clink" antes de abrir Mercado Pago. */
-const MOBILE_REDIRECT_AFTER_IMPACT_MS = 240;
+const REDIRECT_AFTER_IMPACT_MS: Record<TapProfile, number> = { ios: 130, android: 240 };
 
 export default function DonateScreen() {
   const { donations, addDonation } = useDonations();
@@ -29,8 +30,8 @@ export default function DonateScreen() {
 
   const nextCoinIndexRef = useRef(0);
   const pendingRedirectRef = useRef<(() => Promise<void>) | null>(null);
-  // En celulares la caída es rápida para redirigir pegado al toque.
-  const fastRef = useRef(false);
+  // Perfil de celular (web): define la duración de la caída antes de redirigir.
+  const tapProfileRef = useRef<TapProfile | null>(null);
 
   // El sonido y la vibración se disparan dentro de CoinAnimation, justo en
   // el instante del impacto visual — acá solo se dispara la caída.
@@ -51,16 +52,16 @@ export default function DonateScreen() {
       if (isProcessing) return;
       setIsProcessing(true);
 
-      const atTap = opensAtTap();
-      fastRef.current = atTap;
+      const profile = getTapProfile();
+      tapProfileRef.current = profile;
       // En escritorio/nativo redirige al terminar la animación (CoinAnimation).
-      pendingRedirectRef.current = atTap ? null : openLink;
+      pendingRedirectRef.current = profile ? null : openLink;
 
       const saved = save?.(); // guarda la moneda antes de salir de la página
       playDropAnimation();
 
-      if (atTap) {
-        setTimeout(() => openLink(), FAST_IMPACT_MS + MOBILE_REDIRECT_AFTER_IMPACT_MS);
+      if (profile) {
+        setTimeout(() => openLink(), TAP_IMPACT_MS[profile] + REDIRECT_AFTER_IMPACT_MS[profile]);
       }
       return saved;
     },
@@ -109,7 +110,7 @@ export default function DonateScreen() {
             onSelectAmount={startDonation}
             onSelectCustom={startCustomDonation}
             onDropComplete={handleDropComplete}
-            fast={fastRef.current}
+            tapProfile={tapProfileRef.current}
           />
           <AboutIsej />
           <Footer />

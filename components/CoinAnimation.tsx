@@ -25,8 +25,8 @@ type Props = {
   onDropComplete?: () => void;
   /** Si es false, no suena ni vibra en el impacto (ya se hizo en el toque). */
   withEffects?: boolean;
-  /** Caída rápida (celulares), para redirigir a Mercado Pago pegado al toque. */
-  fast?: boolean;
+  /** Perfil de celular (web): define la duración de la caída. Sin perfil: caída pausada. */
+  tapProfile?: 'ios' | 'android' | null;
 };
 
 const COIN_SIZE = 34;
@@ -53,13 +53,15 @@ function timeline(flight: number, drop: number, bounce: number, squash: number, 
 /** Escritorio y app nativa: caída pausada y vistosa. */
 const NORMAL_TIMELINE = timeline(720, 520, 140, 90, 320, 560);
 /**
- * Celulares (web): caída rápida pero completa. La redirección a Mercado Pago
- * tiene que salir a menos de ~1 s del toque para que iOS/Android entreguen el
- * link a la app, así que todo (vuelo, impacto, sonido) ocurre en ~0,7 s.
+ * iPhone/iPad (web): la redirección a Mercado Pago tiene que salir a menos de
+ * ~1 s del toque para que iOS entregue el link a la app, así que la caída
+ * dura lo máximo que lo permite: impacto a los 0,82 s.
  */
-const FAST_TIMELINE = timeline(360, 340, 90, 70, 200, 400);
-/** Instante del impacto en el modo rápido (ms desde el toque). */
-export const FAST_IMPACT_MS = FAST_TIMELINE.impactAt;
+const IOS_TIMELINE = timeline(440, 380, 100, 80, 220, 420);
+/** Android (web): Chrome tolera hasta ~5 s, así que la caída es bien visible: impacto a 1,1 s. */
+const ANDROID_TIMELINE = timeline(580, 520, 130, 90, 280, 520);
+/** Instante del impacto (ms desde el toque) en cada perfil de celular. */
+export const TAP_IMPACT_MS = { ios: IOS_TIMELINE.impactAt, android: ANDROID_TIMELINE.impactAt } as const;
 
 // Aviso (a `onDropComplete`) apenas después del impacto.
 const REDIRECT_AFTER_IMPACT_MS = 150;
@@ -117,9 +119,10 @@ function Spark({ index, flight, drop, geometry }: SparkProps) {
   );
 }
 
-export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete, withEffects = true, fast = false }: Props) {
+export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete, withEffects = true, tapProfile = null }: Props) {
   const scale = jarSize / JAR_VIEWBOX_WIDTH;
-  const tl = fast ? FAST_TIMELINE : NORMAL_TIMELINE;
+  const tl =
+    tapProfile === 'ios' ? IOS_TIMELINE : tapProfile === 'android' ? ANDROID_TIMELINE : NORMAL_TIMELINE;
   const { playCoinSound } = useCoinSound();
 
   const slotX = JAR_SLOT_POINT.x * scale;
