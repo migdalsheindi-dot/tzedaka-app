@@ -4,8 +4,8 @@ import { DESKTOP_BREAKPOINT, MAX_CONTENT_WIDTH, spacing } from '../theme';
 
 /** Hook de responsividad compartido: ¿estamos en layout de desktop? */
 export function useIsWide() {
-  const { width } = useWindowDimensions();
-  return { width, isWide: width >= DESKTOP_BREAKPOINT };
+  const { width, height } = useWindowDimensions();
+  return { width, height, isWide: width >= DESKTOP_BREAKPOINT };
 }
 
 /** Centra el contenido con un ancho máximo y gutters laterales. */

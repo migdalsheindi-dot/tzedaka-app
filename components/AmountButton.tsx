@@ -30,9 +30,6 @@ type Props = {
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-/** Demora entre el toque y la acción, para que se vea el rebote elástico. */
-const PRESS_FEEDBACK_MS = 110;
-
 const CARD_HEIGHT = TOUCH_TARGET + 12;
 
 export function AmountButton({ label, onPress, variant = 'amount', disabled }: Props) {
@@ -115,9 +112,11 @@ export function AmountButton({ label, onPress, variant = 'amount', disabled }: P
 
   const handlePress = () => {
     primeCoinSound(); // desbloquea el audio dentro del gesto del usuario
-    // Rebote elástico y recién después se dispara la acción.
+    // El botón ya se achicó al apoyar el dedo; acá rebota con efecto elástico.
+    // La acción se dispara en el mismo gesto (sin temporizadores) para que la
+    // redirección a Mercado Pago siga "pegada" al toque.
     scale.value = withSpring(1, { damping: 5, stiffness: 240, mass: 0.7 });
-    setTimeout(onPress, PRESS_FEEDBACK_MS);
+    onPress();
   };
 
   return (

@@ -52,7 +52,7 @@ tzedaka-app/
 
 1. El usuario toca un monto rápido ($500 a $10.000) o "Otro monto".
 2. Se dispara de inmediato la animación de la moneda cayendo en la
-   alcancía (~1.6s, `components/CoinAnimation.tsx`). El sonido y la
+   alcancía (`components/CoinAnimation.tsx`; la redirección sale ~0,15 s después del impacto, ≈1,4 s tras el toque, y la acción se dispara en el mismo gesto del toque, sin temporizadores, para que los navegadores de celular entreguen el link a la app de Mercado Pago). El sonido y la
    vibración se disparan juntos justo en el instante en que la moneda
    impacta la pila, no al tocar el botón. En web el sonido usa Web Audio
    API (AudioBuffer precargado, desbloqueado en el toque) y la vibración

@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, fonts, radius, spacing } from '../theme';
 import { formatARS } from '../utils/currency';
@@ -20,7 +19,16 @@ type Props = {
   onDropComplete: () => void;
 };
 
-/** Sección principal: título, alcancía y montos de donación. */
+// Alturas aproximadas (px) de los bloques fijos, para que la alcancía se
+// ajuste al alto de la pantalla y todos los montos queden a la vista.
+const HEADER_H = 80;
+const TITLE_BLOCK_H = 100;
+const PICKER_H = 290;
+const GAPS_H = 40;
+/** Alto de la alcancía por unidad de `jarSize` (frasco + halo + sombra). */
+const JAR_STAGE_RATIO = 1.55;
+
+/** Sección principal: título centrado arriba, alcancía y montos, todo a la vista. */
 export function DonationSection({
   amounts,
   coinCount,
@@ -31,41 +39,42 @@ export function DonationSection({
   onSelectCustom,
   onDropComplete,
 }: Props) {
-  const { width, isWide } = useIsWide();
-  const jarSize = isWide ? 270 : Math.min(width * 0.5, 210);
-  const [gridWidth, setGridWidth] = useState(0);
-  const GAP = 12;
-  const columnWidth = gridWidth > 0 ? Math.floor((gridWidth - GAP * 2) / 3) : undefined;
+  const { height, isWide } = useIsWide();
+
+  let stageHeight: number;
+  if (isWide) {
+    stageHeight = Math.max(360, Math.min(500, height - HEADER_H - TITLE_BLOCK_H - 56));
+  } else {
+    stageHeight = Math.max(190, Math.min(340, height - HEADER_H - TITLE_BLOCK_H - PICKER_H - GAPS_H - 24));
+  }
+  const jarSize = Math.min(isWide ? 260 : 190, Math.max(100, (stageHeight - 36) / JAR_STAGE_RATIO));
 
   const copy = (
     <View style={styles.copy}>
       <Reveal delay={0}>
         <View style={styles.badge}>
-        <View style={styles.badgeDot} />
-        <Text style={styles.badgeText}>Tzedaká · ISEJ</Text>
+          <View style={styles.badgeDot} />
+          <Text style={styles.badgeText}>Tzedaká · ISEJ</Text>
         </View>
       </Reveal>
       <Reveal delay={90}>
         <Text style={[styles.title, isWide && styles.titleWide]}>
           Sumá tu <Text style={styles.titleGold}>impacto</Text>
-          {'\n'}en la comunidad
+          {isWide ? ' ' : '\n'}en la comunidad
         </Text>
       </Reveal>
-      <Reveal delay={180}>
-        <Text style={styles.subtitle}>
-          Una forma simple de aportar, en cualquier momento. Elegí un monto y completalo en
-          segundos.
-        </Text>
+      <Reveal delay={170}>
+        <Text style={styles.subtitle}>Elegí un monto y completalo en segundos.</Text>
       </Reveal>
     </View>
   );
 
   const stage = (
-    <Reveal delay={150} distance={60} style={isWide ? styles.stageWide : undefined}>
+    <Reveal delay={150} distance={50} style={isWide ? styles.stageWide : undefined}>
       <GlassCard
         radius={radius.xl}
         style={isWide ? { flex: 1 } : undefined}
-        innerStyle={[styles.stage, isWide && styles.stageWideInner]}
+        innerStyle={[styles.stage, { height: stageHeight }]}
       >
         <JarStage
           jarSize={jarSize}
@@ -80,16 +89,16 @@ export function DonationSection({
 
   const picker = (
     <View style={styles.picker}>
-      <Reveal delay={240}>
+      <Reveal delay={220}>
         <Text style={styles.pickerLabel}>Elegí un monto</Text>
       </Reveal>
-      <View style={styles.grid} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
+      <View style={styles.grid}>
         {amounts.map((amount, i) => (
           <Reveal
             key={amount}
-            delay={300 + i * 70}
-            distance={36}
-            style={columnWidth ? { width: columnWidth } : { flexGrow: 1, flexBasis: '30%' }}
+            delay={280 + i * 60}
+            distance={32}
+            style={styles.cell}
           >
             <AmountButton
               label={formatARS(amount)}
@@ -98,7 +107,7 @@ export function DonationSection({
             />
           </Reveal>
         ))}
-        <Reveal delay={300 + amounts.length * 70} distance={36} style={{ flexBasis: '100%' }}>
+        <Reveal delay={280 + amounts.length * 60} distance={32} style={styles.cellFull}>
           <AmountButton label="Otro monto" variant="custom" onPress={onSelectCustom} disabled={disabled} />
         </Reveal>
       </View>
@@ -110,18 +119,15 @@ export function DonationSection({
   );
 
   return (
-    <Container style={{ paddingTop: spacing.sm }}>
+    <Container style={{ paddingTop: 0 }}>
+      {copy}
       {isWide ? (
         <View style={styles.wideRow}>
-          <View style={styles.leftCol}>
-            {copy}
-            {picker}
-          </View>
+          <View style={styles.leftCol}>{picker}</View>
           {stage}
         </View>
       ) : (
         <View style={styles.narrow}>
-          {copy}
           {stage}
           {picker}
         </View>
@@ -131,29 +137,17 @@ export function DonationSection({
 }
 
 const styles = StyleSheet.create({
-  wideRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 48,
-    paddingVertical: spacing.lg,
-  },
-  leftCol: {
-    flex: 1.45,
-    gap: 36,
-  },
-  narrow: {
-    gap: spacing.lg,
-  },
   copy: {
-    gap: 16,
+    alignItems: 'center',
+    gap: 10,
+    paddingBottom: spacing.md + 4,
   },
   badge: {
     ...glass,
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
     gap: 8,
-    paddingVertical: 7,
+    paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: radius.pill,
   },
@@ -166,50 +160,58 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontFamily: fonts.bodySemibold,
-    fontSize: 12,
+    fontSize: 11,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: colors.textMuted,
   },
   title: {
     fontFamily: fonts.displayHeavy,
-    fontSize: 46,
-    lineHeight: 48,
-    letterSpacing: -2.2,
+    fontSize: 22,
+    lineHeight: 27,
+    letterSpacing: -0.9,
     color: colors.text,
+    textAlign: 'center',
   },
   titleWide: {
-    fontSize: 56,
-    lineHeight: 58,
-    letterSpacing: -2.6,
+    fontSize: 32,
+    lineHeight: 38,
+    letterSpacing: -1.3,
   },
   titleGold: {
     color: colors.gold,
   },
   subtitle: {
     fontFamily: fonts.body,
-    fontSize: 17,
-    lineHeight: 26,
+    fontSize: 14,
+    lineHeight: 20,
     color: colors.textMuted,
-    maxWidth: 460,
+    textAlign: 'center',
+  },
+  wideRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 48,
+  },
+  leftCol: {
+    flex: 1,
+  },
+  narrow: {
+    gap: spacing.md,
   },
   stage: {
-    paddingVertical: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stageWide: {
-    flex: 0.8,
-  },
-  stageWideInner: {
-    minHeight: 500,
+    flex: 1,
   },
   picker: {
-    gap: 14,
+    gap: 12,
   },
   pickerLabel: {
     fontFamily: fonts.bodySemibold,
-    fontSize: 12,
+    fontSize: 11,
     letterSpacing: 1.6,
     textTransform: 'uppercase',
     color: colors.textFaint,
@@ -217,7 +219,17 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
+  },
+  // 3 columnas parejas: (100% - 2 gaps) / 3
+  cell: {
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: '31%',
+    minWidth: 90,
+  },
+  cellFull: {
+    flexBasis: '100%',
   },
   secure: {
     flexDirection: 'row',
@@ -226,7 +238,7 @@ const styles = StyleSheet.create({
   },
   secureText: {
     fontFamily: fonts.bodyMedium,
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textFaint,
   },
 });

@@ -37,6 +37,10 @@ const BOUNCE_SETTLE_MS = 140;
 const SQUASH_MS = 90;
 const FADE_DELAY_MS = IMPACT_AT + BOUNCE_UP_MS;
 const FADE_MS = 320;
+// La redirección a Mercado Pago sale apenas después del impacto: así queda lo
+// más cerca posible del toque (los navegadores de celular solo abren la app
+// de Mercado Pago si la navegación está cerca del gesto del usuario).
+const REDIRECT_AFTER_IMPACT_MS = 150;
 
 const TRAIL_PARTICLES = 14;
 
@@ -113,6 +117,7 @@ export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete }: P
   const opacity = useSharedValue(0);
   const flash = useSharedValue(0);
   const ring = useSharedValue(0);
+  const redirectSignal = useSharedValue(0);
 
   useEffect(() => {
     if (trigger === 0) return;
@@ -128,6 +133,7 @@ export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete }: P
     rotate.value = 0;
     flash.value = 0;
     ring.value = 0;
+    redirectSignal.value = 0;
     opacity.value = 1;
 
     const handleImpact = (finished?: boolean) => {
@@ -157,9 +163,11 @@ export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete }: P
     );
     squash.value = withDelay(IMPACT_AT, withTiming(0.85, { duration: SQUASH_MS }));
 
-    opacity.value = withDelay(
-      FADE_DELAY_MS,
-      withTiming(0, { duration: FADE_MS }, (finished) => {
+    opacity.value = withDelay(FADE_DELAY_MS, withTiming(0, { duration: FADE_MS }));
+
+    redirectSignal.value = withDelay(
+      IMPACT_AT + REDIRECT_AFTER_IMPACT_MS,
+      withTiming(1, { duration: 1 }, (finished) => {
         if (finished && onDropComplete) {
           runOnJS(onDropComplete)();
         }
