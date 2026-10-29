@@ -62,8 +62,10 @@ tzedaka-app/
      la caída depende del sistema, porque iOS (Universal Links) solo entrega el
      link a la app si la navegación sale a ≤ ~1 s del toque, y Chrome en
      Android tolera hasta ~5 s (con intent a la app de Mercado Pago):
-     - **iPhone/iPad:** impacto a 0,85 s, redirección a ~0,95 s.
-     - **Android:** impacto a 1,1 s, redirección a ~1,35 s.
+     - **iPhone/iPad:** impacto a 1,85 s, redirección a ~2 s. ⚠️ Pasa el límite
+       de ~1 s de iOS: si en iPhone no abre la app de Mercado Pago, volver a
+       `timeline(440, 380, ...)` en `components/CoinAnimation.tsx` (impacto 0,82 s).
+     - **Android:** impacto a 2,1 s, redirección a ~2,35 s.
    - **Suena con el celular en silencio:** en iOS el interruptor de silencio
      mutea el Web Audio, así que en el toque se activa la sesión de audio de
      reproducción (`navigator.audioSession.type = 'playback'` + un `<audio>`

@@ -25,7 +25,7 @@ type Props = {
 // ajuste al alto de la pantalla y todos los montos queden a la vista.
 const HEADER_H = 80;
 const TITLE_BLOCK_H = 100;
-const PICKER_H = 290;
+const PICKER_H = 232;
 const GAPS_H = 40;
 /** Alto de la alcancía por unidad de `jarSize` (frasco + halo + sombra). */
 const JAR_STAGE_RATIO = 1.55;
@@ -47,11 +47,11 @@ export function DonationSection({
 
   let stageHeight: number;
   if (isWide) {
-    stageHeight = Math.max(360, Math.min(500, height - HEADER_H - TITLE_BLOCK_H - 56));
+    stageHeight = Math.max(380, Math.min(560, height - HEADER_H - TITLE_BLOCK_H - 48));
   } else {
-    stageHeight = Math.max(190, Math.min(340, height - HEADER_H - TITLE_BLOCK_H - PICKER_H - GAPS_H - 24));
+    stageHeight = Math.max(210, Math.min(500, height - HEADER_H - TITLE_BLOCK_H - PICKER_H - GAPS_H - 20));
   }
-  const jarSize = Math.min(isWide ? 260 : 190, Math.max(100, (stageHeight - 36) / JAR_STAGE_RATIO));
+  const jarSize = Math.min(isWide ? 340 : 270, Math.max(110, (stageHeight - 30) / JAR_STAGE_RATIO));
 
   const copy = (
     <View style={styles.copy}>
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   picker: {
-    gap: 12,
+    gap: 10,
   },
   pickerLabel: {
     fontFamily: fonts.bodySemibold,
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   // 3 columnas parejas: (100% - 2 gaps) / 3
   cell: {

@@ -53,13 +53,13 @@ function timeline(flight: number, drop: number, bounce: number, squash: number, 
 /** Escritorio y app nativa: caída pausada y vistosa. */
 const NORMAL_TIMELINE = timeline(720, 520, 140, 90, 320, 560);
 /**
- * iPhone/iPad (web): la redirección a Mercado Pago tiene que salir a menos de
- * ~1 s del toque para que iOS entregue el link a la app, así que la caída
- * dura lo máximo que lo permite: impacto a los 0,82 s.
+ * iPhone/iPad (web): impacto a los 1,8 s. OJO: iOS solo entrega el link de
+ * Mercado Pago a la app si la redirección sale a ≤ ~1 s del toque; con esta
+ * duración, si no abre la app, volver a `timeline(440, 380, ...)` (impacto 0,82 s).
  */
-const IOS_TIMELINE = timeline(440, 380, 100, 80, 220, 420);
-/** Android (web): Chrome tolera hasta ~5 s, así que la caída es bien visible: impacto a 1,1 s. */
-const ANDROID_TIMELINE = timeline(580, 520, 130, 90, 280, 520);
+const IOS_TIMELINE = timeline(940, 880, 100, 80, 220, 420);
+/** Android (web): Chrome tolera hasta ~5 s: impacto a los 2,1 s. */
+const ANDROID_TIMELINE = timeline(1080, 1020, 130, 90, 280, 520);
 /** Instante del impacto (ms desde el toque) en cada perfil de celular. */
 export const TAP_IMPACT_MS = { ios: IOS_TIMELINE.impactAt, android: ANDROID_TIMELINE.impactAt } as const;
 

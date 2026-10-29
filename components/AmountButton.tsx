@@ -30,7 +30,7 @@ type Props = {
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-const CARD_HEIGHT = TOUCH_TARGET + 12;
+const CARD_HEIGHT = 54;
 
 export function AmountButton({ label, onPress, variant = 'amount', disabled }: Props) {
   const reduce = useReducedMotion();
@@ -162,7 +162,7 @@ export function AmountButton({ label, onPress, variant = 'amount', disabled }: P
               />
             </Animated.View>
             <Text style={styles.customLabel}>{label}</Text>
-            <Ionicons name="arrow-forward" size={18} color={colors.goldInk} />
+            <Ionicons name="arrow-forward" size={16} color={colors.goldInk} />
           </LinearGradient>
         </View>
       ) : (
@@ -199,8 +199,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: fonts.figureBold,
-    fontSize: 25,
-    letterSpacing: -1.2,
+    fontSize: 20,
+    letterSpacing: -0.9,
   },
   customWrap: {
     borderRadius: radius.md,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   customLabel: {
     fontFamily: fonts.display,
-    fontSize: 17,
+    fontSize: 15,
     letterSpacing: -0.3,
     color: colors.goldInk,
   },
