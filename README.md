@@ -11,20 +11,24 @@ App de una sola pantalla: la Tzedaká, los montos y una reseña breve de ISEJ.
 
 ```
 tzedaka-app/
-  theme.ts                 Sistema de diseño oscuro: paleta (#0A0B0E + dorado metálico + índigo),
-                           tipografía (Plus Jakarta Sans / Inter / Space Grotesk), radios, breakpoints
+  theme.ts                 Sistema de diseño oscuro: paleta (#050507 + dorado metálico + índigo),
+                           tipografía (Syne títulos / Plus Jakarta Sans texto / Space Grotesk cifras)
   app/
     _layout.tsx            Layout raíz (fuentes + providers)
     index.tsx              Pantalla única: lógica de donación
     +not-found.tsx         Cualquier ruta vieja vuelve al inicio
   components/
     DonationSection.tsx    Título + alcancía + montos (2 columnas en desktop, apilado en móvil)
-    AmountButton.tsx       Tarjeta de monto de cristal: rebote (spring), borde y brillo dorado al activarse
-    JarStage.tsx           La alcancía con su halo y la moneda que cae
+    AmountButton.tsx       Tarjeta de monto: inclinación 3D + luz que sigue al cursor, borde dorado,
+                           rebote elástico al presionar; "Otro monto" con destello y pulso continuos
+    JarStage.tsx           La alcancía flotando (floating) con halo dorado y sombra que respira
+    Atmosphere.tsx         Fondo #050507 con luces ambientales difusas que derivan lentamente
+    Reveal.tsx             Aparición fade-in-up al hacer scroll (IntersectionObserver, bezier suave)
     TzedakaBox.tsx         Ilustración SVG de la alcancía (jarra transparente + tapa/base de madera)
     Coin.tsx               Moneda dorada metálica (borde acanalado, relieve y destello)
-    CoinAnimation.tsx      Caída de la moneda + sonido y vibración exactamente en el impacto
-    Glass.tsx              Superficie de cristal (blur + borde 1px al 8%) y luz ambiental de fondo
+    CoinAnimation.tsx      La moneda cruza la pantalla con rastro de partículas doradas, destello en
+                           la ranura y onda al impactar; sonido y vibración exactamente en el impacto
+    Glass.tsx              GlassCard: cristal con borde degradado de 1px, blur y halo dorado
     AboutIsej.tsx          Reseña breve de ISEJ + footer
     IsejHeader.tsx         Barra superior mínima (logo de ISEJ)
     layout.tsx             Container y hook de responsividad (useIsWide)

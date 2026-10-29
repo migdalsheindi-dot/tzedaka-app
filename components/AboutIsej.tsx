@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Linking, Pressable, PressableStateCallbackType, StyleSheet, Text, View } from 'react-native';
 import { colors, fonts, radius, spacing } from '../theme';
-import { glass } from './Glass';
+import { GlassCard } from './Glass';
 import { Container, useIsWide } from './layout';
+import { Reveal } from './Reveal';
 
 /** Reseña breve de ISEJ. */
 export function AboutIsej() {
@@ -10,7 +11,8 @@ export function AboutIsej() {
 
   return (
     <Container style={styles.section}>
-      <View style={[styles.card, isWide && styles.cardWide]}>
+      <Reveal distance={56}>
+        <GlassCard radius={radius.lg} innerStyle={[styles.card, isWide && styles.cardWide]}>
         <Text style={styles.eyebrow}>Sobre ISEJ</Text>
         <View style={[styles.body, isWide && { flex: 1 }]}>
           <Text style={styles.text}>
@@ -30,7 +32,8 @@ export function AboutIsej() {
             <Ionicons name="arrow-forward" size={15} color={colors.gold} />
           </Pressable>
         </View>
-      </View>
+        </GlassCard>
+      </Reveal>
     </Container>
   );
 }
@@ -48,8 +51,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   card: {
-    ...glass,
-    borderRadius: radius.lg,
     padding: spacing.lg,
     gap: 14,
   },

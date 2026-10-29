@@ -1,13 +1,13 @@
 /**
  * Sistema de diseño de Tzedaká ISEJ — versión oscura y sofisticada.
  *
- * Lienzo casi negro (#0A0B0E) con acentos dorados metálicos y un toque de
+ * Lienzo casi negro (#050507) con acentos dorados metálicos y un toque de
  * índigo profundo como luz ambiental. Superficies de "cristal": relleno
  * translúcido + borde de 1px blanco al 8% + desenfoque de fondo.
- * Títulos en Plus Jakarta Sans, texto en Inter y cifras en Space Grotesk.
+ * Títulos en Syne (carácter), texto en Plus Jakarta Sans y cifras en Space Grotesk.
  */
 export const colors = {
-  bg: '#0A0B0E',
+  bg: '#050507',
   indigo: '#2B2F8F',
 
   surface: 'rgba(255,255,255,0.045)',
@@ -26,11 +26,11 @@ export const colors = {
 } as const;
 
 export const fonts = {
-  body: 'Inter_400Regular',
-  bodyMedium: 'Inter_500Medium',
-  bodySemibold: 'Inter_600SemiBold',
-  display: 'PlusJakartaSans_700Bold',
-  displayHeavy: 'PlusJakartaSans_800ExtraBold',
+  body: 'PlusJakartaSans_400Regular',
+  bodyMedium: 'PlusJakartaSans_500Medium',
+  bodySemibold: 'PlusJakartaSans_600SemiBold',
+  display: 'Syne_700Bold',
+  displayHeavy: 'Syne_800ExtraBold',
   figure: 'SpaceGrotesk_500Medium',
   figureBold: 'SpaceGrotesk_700Bold',
 } as const;
@@ -59,3 +59,6 @@ export const MAX_CONTENT_WIDTH = 1080;
 
 /** A partir de este ancho se usa el layout de desktop (dos columnas). */
 export const DESKTOP_BREAKPOINT = 900;
+
+/** Curva de aceleración elegante (ease-out expo suave) para las entradas. */
+export const EASE_OUT = [0.22, 1, 0.36, 1] as const;

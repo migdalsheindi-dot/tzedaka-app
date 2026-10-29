@@ -3,10 +3,9 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AboutIsej, Footer } from '../components/AboutIsej';
+import { Atmosphere } from '../components/Atmosphere';
 import { DonationSection } from '../components/DonationSection';
-import { BackgroundGlow } from '../components/Glass';
 import { IsejHeader } from '../components/IsejHeader';
-import { primeCoinSound } from '../hooks/useCoinSound';
 import { useDonations } from '../hooks/useDonations';
 import { colors } from '../theme';
 import { openMercadoPagoCustomAmount, openMercadoPagoDonation } from '../utils/mercadopago';
@@ -36,7 +35,6 @@ export default function DonateScreen() {
     async (amount: number) => {
       if (isProcessing) return;
       setIsProcessing(true);
-      primeCoinSound(); // desbloquea el audio dentro del gesto del usuario
 
       pendingRedirectRef.current = () => openMercadoPagoDonation(amount);
       playDropAnimation();
@@ -50,7 +48,6 @@ export default function DonateScreen() {
   const startCustomDonation = useCallback(() => {
     if (isProcessing) return;
     setIsProcessing(true);
-    primeCoinSound(); // desbloquea el audio dentro del gesto del usuario
 
     pendingRedirectRef.current = () => openMercadoPagoCustomAmount();
     playDropAnimation();
@@ -67,7 +64,7 @@ export default function DonateScreen() {
 
   return (
     <View style={styles.root}>
-      <BackgroundGlow />
+      <Atmosphere />
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <ScrollView
           contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 12) + 24 }}

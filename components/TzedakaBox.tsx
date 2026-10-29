@@ -132,12 +132,12 @@ export function TzedakaBox({ size = 220, coinCount = 0 }: Props) {
       <SvgText
         x="110"
         y="146"
-        fontSize="17"
-        fontFamily="Inter_800ExtraBold"
+        fontSize="12.5"
+        fontFamily="Syne_800ExtraBold"
         fontWeight="800"
         fill="#0F1B33"
         textAnchor="middle"
-        letterSpacing={0.5}
+        letterSpacing={0.2}
       >
         TZEDAKÁ
       </SvgText>

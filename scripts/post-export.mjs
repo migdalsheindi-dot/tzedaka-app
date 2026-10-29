@@ -9,9 +9,9 @@ let html = readFileSync(indexPath, 'utf8');
 html = html.replace(
   /<meta name="viewport"[^>]*>/,
   '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />' +
-    '\n    <meta name="theme-color" content="#0A0B0E" />'
+    '\n    <meta name="theme-color" content="#050507" />'
 );
-html = html.replace('</head>', '<style>html,body{background-color:#0A0B0E}</style></head>');
+html = html.replace('</head>', '<style>html,body{background-color:#050507}</style></head>');
 
 writeFileSync(indexPath, html);
 copyFileSync(indexPath, 'dist/404.html'); // fallback SPA en GitHub Pages

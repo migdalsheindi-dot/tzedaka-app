@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { colors, fonts, radius, spacing } from '../theme';
 import { formatARS } from '../utils/currency';
 import { AmountButton } from './AmountButton';
-import { glass } from './Glass';
+import { glass, GlassCard } from './Glass';
 import { JarStage } from './JarStage';
 import { Container, useIsWide } from './layout';
+import { Reveal } from './Reveal';
 
 type Props = {
   amounts: number[];
@@ -38,25 +38,35 @@ export function DonationSection({
   const columnWidth = gridWidth > 0 ? Math.floor((gridWidth - GAP * 2) / 3) : undefined;
 
   const copy = (
-    <Animated.View entering={FadeInDown.duration(600)} style={styles.copy}>
-      <View style={styles.badge}>
+    <View style={styles.copy}>
+      <Reveal delay={0}>
+        <View style={styles.badge}>
         <View style={styles.badgeDot} />
         <Text style={styles.badgeText}>Tzedaká · ISEJ</Text>
-      </View>
-      <Text style={[styles.title, isWide && styles.titleWide]}>
-        Sumá tu <Text style={styles.titleGold}>impacto</Text>
-        {'\n'}en la comunidad
-      </Text>
-      <Text style={styles.subtitle}>
-        Una forma simple de aportar, en cualquier momento. Elegí un monto y completalo en
-        segundos.
-      </Text>
-    </Animated.View>
+        </View>
+      </Reveal>
+      <Reveal delay={90}>
+        <Text style={[styles.title, isWide && styles.titleWide]}>
+          Sumá tu <Text style={styles.titleGold}>impacto</Text>
+          {'\n'}en la comunidad
+        </Text>
+      </Reveal>
+      <Reveal delay={180}>
+        <Text style={styles.subtitle}>
+          Una forma simple de aportar, en cualquier momento. Elegí un monto y completalo en
+          segundos.
+        </Text>
+      </Reveal>
+    </View>
   );
 
   const stage = (
-    <Animated.View entering={FadeIn.duration(800).delay(150)} style={isWide ? styles.stageWide : undefined}>
-      <View style={[styles.stage, isWide && styles.stageWideInner]}>
+    <Reveal delay={150} distance={60} style={isWide ? styles.stageWide : undefined}>
+      <GlassCard
+        radius={radius.xl}
+        style={isWide ? { flex: 1 } : undefined}
+        innerStyle={[styles.stage, isWide && styles.stageWideInner]}
+      >
         <JarStage
           jarSize={jarSize}
           coinCount={coinCount}
@@ -64,30 +74,39 @@ export function DonationSection({
           pileIndex={pileIndex}
           onDropComplete={onDropComplete}
         />
-      </View>
-    </Animated.View>
+      </GlassCard>
+    </Reveal>
   );
 
   const picker = (
-    <Animated.View entering={FadeInDown.duration(600).delay(250)} style={styles.picker}>
-      <Text style={styles.pickerLabel}>Elegí un monto</Text>
+    <View style={styles.picker}>
+      <Reveal delay={240}>
+        <Text style={styles.pickerLabel}>Elegí un monto</Text>
+      </Reveal>
       <View style={styles.grid} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
-        {amounts.map((amount) => (
-          <AmountButton
+        {amounts.map((amount, i) => (
+          <Reveal
             key={amount}
-            label={formatARS(amount)}
-            onPress={() => onSelectAmount(amount)}
-            disabled={disabled}
-            width={columnWidth}
-          />
+            delay={300 + i * 70}
+            distance={36}
+            style={columnWidth ? { width: columnWidth } : { flexGrow: 1, flexBasis: '30%' }}
+          >
+            <AmountButton
+              label={formatARS(amount)}
+              onPress={() => onSelectAmount(amount)}
+              disabled={disabled}
+            />
+          </Reveal>
         ))}
-        <AmountButton label="Otro monto" variant="custom" onPress={onSelectCustom} disabled={disabled} />
+        <Reveal delay={300 + amounts.length * 70} distance={36} style={{ flexBasis: '100%' }}>
+          <AmountButton label="Otro monto" variant="custom" onPress={onSelectCustom} disabled={disabled} />
+        </Reveal>
       </View>
       <View style={styles.secure}>
         <Ionicons name="lock-closed" size={13} color={colors.textFaint} />
         <Text style={styles.secureText}>Pago seguro con Mercado Pago</Text>
       </View>
-    </Animated.View>
+    </View>
   );
 
   return (
@@ -115,11 +134,11 @@ const styles = StyleSheet.create({
   wideRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 64,
+    gap: 48,
     paddingVertical: spacing.lg,
   },
   leftCol: {
-    flex: 1,
+    flex: 1.45,
     gap: 36,
   },
   narrow: {
@@ -154,15 +173,15 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.displayHeavy,
-    fontSize: 38,
-    lineHeight: 42,
-    letterSpacing: -1.4,
+    fontSize: 46,
+    lineHeight: 48,
+    letterSpacing: -2.2,
     color: colors.text,
   },
   titleWide: {
-    fontSize: 60,
-    lineHeight: 64,
-    letterSpacing: -2.4,
+    fontSize: 56,
+    lineHeight: 58,
+    letterSpacing: -2.6,
   },
   titleGold: {
     color: colors.gold,
@@ -175,15 +194,12 @@ const styles = StyleSheet.create({
     maxWidth: 460,
   },
   stage: {
-    ...glass,
-    borderRadius: radius.xl,
     paddingVertical: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
   stageWide: {
-    flex: 1,
+    flex: 0.8,
   },
   stageWideInner: {
     minHeight: 500,
