@@ -17,6 +17,7 @@ type Props = {
   onSelectAmount: (amount: number) => void;
   onSelectCustom: () => void;
   onDropComplete: () => void;
+  withEffects?: boolean;
 };
 
 // Alturas aproximadas (px) de los bloques fijos, para que la alcancía se
@@ -38,6 +39,7 @@ export function DonationSection({
   onSelectAmount,
   onSelectCustom,
   onDropComplete,
+  withEffects,
 }: Props) {
   const { height, isWide } = useIsWide();
 
@@ -82,6 +84,7 @@ export function DonationSection({
           dropTrigger={dropTrigger}
           pileIndex={pileIndex}
           onDropComplete={onDropComplete}
+          withEffects={withEffects}
         />
       </GlassCard>
     </Reveal>

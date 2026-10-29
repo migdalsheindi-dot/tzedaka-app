@@ -58,6 +58,20 @@ function openOnWeb(url: string) {
   }, 1200);
 }
 
+/**
+ * ¿Navegador de celular o tablet? Ahí el link a Mercado Pago tiene que
+ * abrirse en el mismo toque: iOS (Universal Links) y Android (intents) solo
+ * entregan el link a la app si la navegación nace de un gesto del usuario;
+ * un salto de página programado con temporizador cae en la web (y a veces
+ * pasa por Mercado Libre).
+ */
+export function opensAtTap(): boolean {
+  if (Platform.OS !== 'web' || typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  const isIpadOs = /Macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
+  return /Android|iPhone|iPad|iPod/i.test(ua) || isIpadOs;
+}
+
 async function openUrl(url: string): Promise<void> {
   if (Platform.OS === 'web') {
     openOnWeb(url);

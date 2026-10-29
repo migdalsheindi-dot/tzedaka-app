@@ -48,27 +48,30 @@ function decodeAudio(ctx: AudioContext, data: ArrayBuffer): Promise<AudioBuffer>
   });
 }
 
+/** Decodifica el archivo a AudioBuffer (se puede hacer con el contexto suspendido). */
+function ensureDecoded(ctx: AudioContext) {
+  if (buffer || decoding) return;
+  decoding = preloadRawData()
+    .then(async (data) => {
+      if (!data) return;
+      buffer = await decodeAudio(ctx, data.slice(0));
+    })
+    .catch(() => {})
+    .finally(() => {
+      decoding = null;
+    });
+}
+
 /**
  * Desbloquea el audio. Debe llamarse dentro de un gesto del usuario (el
  * toque en un monto): los navegadores —sobre todo iOS Safari— solo permiten
- * crear/reanudar el AudioContext así.
+ * reanudar el AudioContext así.
  */
 export function primeCoinSound() {
   const ctx = getContext();
   if (!ctx) return;
   if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-
-  if (!buffer && !decoding) {
-    decoding = preloadRawData()
-      .then(async (data) => {
-        if (!data) return;
-        buffer = await decodeAudio(ctx, data.slice(0));
-      })
-      .catch(() => {})
-      .finally(() => {
-        decoding = null;
-      });
-  }
+  ensureDecoded(ctx);
 }
 
 function play() {
@@ -82,9 +85,11 @@ function play() {
 }
 
 export function useCoinSound() {
-  // Precarga el archivo apenas se monta la pantalla.
+  // Descarga y decodifica el sonido apenas se monta la pantalla, así el
+  // primer toque ya suena sin demora.
   useEffect(() => {
-    preloadRawData();
+    const ctx = getContext();
+    if (ctx) ensureDecoded(ctx);
   }, []);
 
   const playCoinSound = useCallback(() => {

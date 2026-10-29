@@ -51,15 +51,19 @@ tzedaka-app/
 ## Flujo de donación
 
 1. El usuario toca un monto rápido ($500 a $10.000) o "Otro monto".
-2. Se dispara de inmediato la animación de la moneda cayendo en la
-   alcancía (`components/CoinAnimation.tsx`; la redirección sale ~0,15 s después del impacto, ≈1,4 s tras el toque, y la acción se dispara en el mismo gesto del toque, sin temporizadores, para que los navegadores de celular entreguen el link a la app de Mercado Pago). El sonido y la
-   vibración se disparan juntos justo en el instante en que la moneda
-   impacta la pila, no al tocar el botón. En web el sonido usa Web Audio
-   API (AudioBuffer precargado, desbloqueado en el toque) y la vibración
-   `navigator.vibrate([15, 30, 10, 20, 25])` (iOS Safari no soporta
-   vibración web); en nativo, `expo-audio` y `expo-haptics`. Para los 5 montos
-   fijos, la moneda queda guardada en la alcancía (AsyncStorage).
-3. Apenas termina la animación, redirige automáticamente a Mercado Pago
+2. Se dispara la animación de la moneda cayendo en la alcancía
+   (`components/CoinAnimation.tsx`) con sonido (Web Audio API) y vibración.
+   Para los 5 montos fijos, la moneda queda guardada en la alcancía
+   (AsyncStorage). El orden depende del dispositivo:
+   - **Celular / tablet (web):** el link de Mercado Pago se abre **en el mismo
+     toque** (`opensAtTap()` en `utils/mercadopago.ts`), junto con el sonido y
+     la vibración. iOS (Universal Links) y Android (intents) solo entregan el
+     link a la app de Mercado Pago si la navegación nace de un gesto del
+     usuario; un salto de página con temporizador cae en la web (y a veces
+     pasa por Mercado Libre).
+   - **Escritorio y app nativa:** animación primero; sonido y vibración en el
+     instante del impacto y la redirección ~0,15 s después (≈1,4 s).
+3. La redirección va siempre a Mercado Pago
    (`utils/mercadopago.ts`), sin pantallas ni pasos intermedios:
    - **Monto fijo** ($500 / $1.000 / $2.000 / $5.000 / $10.000): va directo
      al checkout específico de ese monto (`mpago.la/...`), ya armado y

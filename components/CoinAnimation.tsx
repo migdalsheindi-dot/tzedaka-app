@@ -23,6 +23,8 @@ type Props = {
   /** Índice que ocupará esta moneda dentro de la pila (0-based). */
   pileIndex: number;
   onDropComplete?: () => void;
+  /** Si es false, no suena ni vibra en el impacto (ya se hizo en el toque). */
+  withEffects?: boolean;
 };
 
 const COIN_SIZE = 34;
@@ -95,7 +97,7 @@ function Spark({ index, flight, drop, geometry }: SparkProps) {
   );
 }
 
-export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete }: Props) {
+export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete, withEffects = true }: Props) {
   const scale = jarSize / JAR_VIEWBOX_WIDTH;
   const { playCoinSound } = useCoinSound();
 
@@ -138,7 +140,7 @@ export function CoinAnimation({ jarSize, trigger, pileIndex, onDropComplete }: P
 
     const handleImpact = (finished?: boolean) => {
       'worklet';
-      if (!finished) return;
+      if (!finished || !withEffects) return;
       runOnJS(impactFeedback)();
       runOnJS(playCoinSound)();
     };
